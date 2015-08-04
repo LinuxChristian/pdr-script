@@ -44,9 +44,9 @@ parti = [[u"Christian Fredborg Brædstrup",trans+"a6cee3"],
 stats = []
 
 # First visit https://developers.facebook.com/tools/explorer for an one hour token
-token=''
+token='CAACEdEose0cBAPhmInGb8yW58ZBuQ0rPFmZBvuW4nVZCi6KBfe8ZCUfRiWds9KZBT9dsykuZBUXgoUW4NnTmKakfh1rVdAmFlITZCzTZBZBWZBC1GQxSTSzIZAGjnTAh37mlvgGhmJUGBQ1EWMsZAuQG7zCU9bJAJAbsolyjbbNxirMRmQ6FE4SPbaLxWVRr5EcWk8usPdA0uvgcNZAYNmZAT4GpfKKzbXrVqXvEUZD'
 
-facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since=2015-08-01&date_format=U'
+facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since=1438372800&limit=100&date_format=U'
 
 # Note: Facebook timestamps are local to the device and encoded in Pacific time
 # Timestamps are returned in Unix epoch time
@@ -95,26 +95,24 @@ elif output == 'kml':
     d = KML.Document(KML.name("Postnr Danmark Rundt"))
     
     for p in parti:
-        fld = KML.Folder(KML.name(p[0]))
-        
-        # Create unique style
-        ls = d.append(KML.Style(KML.PolyStyle(KML.LineStyle(KML.width("1.5")),KML.color(p[1])),id=p[0].split(' ')[0]))
+        fld = KML.Folder(KML.name(p[0]))        
 
-
+        print("Processing "+p[0])
         for post in data['data']:
-            if ('picture' in post) and ('message' in post):
+            if ('picture' in post) and ('www.google.com' not in post['picture']) and ('message' in post):
                 if (p[0] in post['from']['name']):
                     t = datetime.datetime.fromtimestamp(float(post["created_time"]))
                     tt = t.strftime('%Y-%m-%d')
                     name = post["from"]["name"].encode('utf-8')
 
+#                    if ("Thue Sylvester Bording" 
+                    
                     # Grab GPS if it exists
                     if "place" in post:
                         print("Found GPS data.. haps haps haps")
-                        post["place"]["location"]["latitude"]
-                        fld.append(KML.point(KML.coordinates(
-                            post["place"]["location"]["longitude"],
-                            post["place"]["location"]["latitude"])))
+ #                       fld.append(KML.point(KML.coordinates(
+ #                           post["place"]["location"]["longitude"],
+ #                           post["place"]["location"]["latitude"])))
                         
                     # Split message on newline
                     msg = post["message"].encode('utf-8').split('\n')
@@ -137,17 +135,19 @@ elif output == 'kml':
                     place.styleUrl = KML.StyleUrl("#"+p[0].split(' ')[0])
                     # Add a nice comment
                     place.description = KML.description(str(tt))#+"<br> <a href='"+post["picture"]+"'>Foto</a>]]>"
-                    
-                    # Remove tesslate tag
-                    
+
+#                    print(p[0]+" Found zip "+str(zipcode))
                     fld.append(place)
-                
+
         # Append folder to document if any records exist
-#        exit()
         if (len(fld.findall('Placemark/')) > 0):
-            stats.append([name, len(fld.findall('Placemark/Polygon/')), len(fld.findall('Placemark/Polygon/'))/597.0])
+            print("Added "+p[0])
+            stats.append([name, len(fld.findall('Placemark/')), len(fld.findall('Placemark/'))/597.0])
+            # Create unique style
+            ls = d.append(KML.Style(KML.PolyStyle(KML.LineStyle(KML.width("1.5")),KML.color(p[1])),id=p[0].split(' ')[0]))
             d.append(fld)
-        
+        else:
+            print("No records found")
     # Print xml pretty
     xmlstr=etree.tostring(d, pretty_print=True)
     
