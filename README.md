@@ -1,2 +1,9 @@
 # pdr-script
-Scripts for Postnumre Danmark Rundt
+
+This collection of scripts parse the PDR facebook page producing a kml file. This file is easy to import into google maps or any GIS software.
+
+# Usage
+* Become admin on the facebook page
+* Get a facebook access token: https://developers.facebook.com/tools/explorer?method=GET&path=me%3Ffields%3Did%2Cname
+* Run the script without any commandline arguments
+* Upload the file to my google maps
