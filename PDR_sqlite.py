@@ -18,40 +18,232 @@ from pykml import parser
 from pykml.factory import KML_ElementMaker as KML
 from lxml import etree
 
-con = None
+# Plotting
+from matplotlib import cm
 
-def WriteDataFile(data,poly):
+# Data wrangeling
+import pandas as pd
+
+'''
+####################
+#                  #
+#  MAP FUNCTIONS   #
+#                  #
+####################
+'''
+
+'''
+This function writes the main part of the map
+index.html file
+
+INPUT:
+parti - List of participants
+'''
+def WriteMapIndex(parti):
+    s = '''
+    <!DOCTYPE html>
+    <html>
+            <head>
+                    <title>Postnr Danmark Rundt</title>
+                    <meta charset="utf-8" />
+                    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+                    <link rel="stylesheet" type="text/css" href="css/own_style.css">
+                    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+                    <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+                    <script src="js/leaflet-hash.js"></script>
+                    <script src="js/Autolinker.min.js"></script>
+                    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+            </head>
+            <body>
+                    <div id="map"></div>
+                    <input id="slide" type="range" min="0" max="1" step="0.1" value="1" onchange="updateOpacity(this.value)">\n'''
+
+    # Add list of user data files
+    for p in parti:
+        print(p[1])
+        s+='<script src="latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js"></script>\n'
+
+    s+='''
+            <script>
+            var map = L.map('map', {
+                    zoomControl:true, maxZoom:19
+            }).fitBounds([[53.7465326518,7.56974247323],[57.8457433581,15.0093935068]]);
+            var hash = new L.Hash(map);
+            var additional_attrib = 'created by Christian Braedstrup';
+            var feature_group = new L.featureGroup([]);
+            var raster_group = new L.LayerGroup([]);
+            var basemap_0 = L.tileLayer('http://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png', { 
+                    attribution: additional_attrib 
+            });	
+            basemap_0.addTo(map);	
+            var layerOrder=new Array();
+    '''
+        
+    return s
+
+'''
+This function writes the user data to the index
+
+INPUT:
+p - Name of Participant
+
+'''
+def WriteMapParti(p,i):
+
+    shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
+    c = np.multiply(cm.Paired(i*10)[:3],255)
+    s = '''
+    function pop_'''+shortname+'''(feature, layer) {					
+    var popupContent = '<table><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['Navn'])) + '</td></tr><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['Postnummer'])) + '</td></tr><tr><th scope="row">By</th><td>' + Autolinker.link(String(feature.properties['By'])) + '</td></tr><tr><th scope="row">Dato</th><td>' + Autolinker.link(String(feature.properties['Dato'])) + '</td></tr></table>';
+    layer.bindPopup(popupContent);
+    }
+
+    function doStyle'''+shortname+'''(feature) {
+    return {
+    color: '#000000',
+    fillColor: '#'''+'%02x%02x%02x' % (c[0], c[1], c[2])+'''',
+    weight: 1.3,
+    dashArray: '',
+    opacity: 0.466666666667,
+    fillOpacity: 0.466666666667
+    };'''
+    
+    s+='''}
+    var exp_'''+shortname+'''JSON = new L.geoJson(exp_'''+shortname+''',{
+    onEachFeature: pop_'''+shortname+''',
+    style: doStyle'''+shortname+'''
+    });
+    layerOrder[layerOrder.length] = exp_'''+shortname+'''JSON;
+    for (index = 0; index < layerOrder.length; index++) {
+    feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
+    }
+    //add comment sign to hide this layer on the map in the initial view.
+    feature_group.addLayer(exp_'''+shortname+'''JSON);
+        '''
+    return s;
+
+'''
+Writes the remaining part of the index file.
+
+INPUT:
+parti - List of participants
+'''
+def WriteMapFooter(parti):
+    s = '''
+    feature_group.addTo(map);
+    var title = new L.Control();
+    title.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+    };
+    title.update = function () {
+    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: 04/08-2015'
+    };
+    title.addTo(map);
+    var baseMaps = {
+    'Thunderforest Outdoors': basemap_0
+    };
+    L.control.layers(baseMaps,{'''
+
+    for i,p in enumerate(parti):
+        shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
+        s+='"'+p[1]+'": exp_'+shortname+"JSON"
+        if i < len(parti)-1:
+            s+=','
+            
+    s+='''},{collapsed:false}).addTo(map);
+    function updateOpacity(value) {
+    }
+    L.control.scale({options: {position: 'bottomleft',maxWidth: 100,metric: true,imperial: false,updateWhenIdle: false}}).addTo(map);
+    </script>
+    </body>
+    </html>
+
+    '''
+    return s;
+
+'''
+Combined function to write new participants
+into the index.html file
+
+INPUT:
+plist - List of all participants
+'''
+def WriteMap(plist):
+    s = ''
+    s+=WriteMapIndex(plist)
+    
+    for i,p in enumerate(plist):
+        s+=WriteMapParti(p,i)
+
+    s+=WriteMapFooter(plist)
+
+    with open('/tmp/index.html','w') as f:
+        f.write(s.encode('utf-8'))
+
+'''
+####################
+#                  #
+#  MAP FUNCTIONS   #
+#                  #
+####################
+'''
+def WriteHeader(name):
     # Write the first part
-    s = '''var exp_ChristianFredborgBrdstrupany = {
+    s = '''var exp_'''+(name.replace(' ','')).encode('ascii','ignore').replace('.','')+''' = {
     "type": "FeatureCollection",
     "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
     
-    "features": [
-    { "type": "Feature", "properties": {'''+'''},"Geometry":{"type",'''
+    "features": [\n'''
 
+    return s
+
+'''
+This function writes the current location
+polygon to json format for leaflet.
+
+Polygons can either be single or in a
+multipolygon structure.
+'''
+def WritePolygon(data,place):
+# 
+    s = '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]+'''","Postnummer":"'''+str(data[3])+'''","By":"'''+data[2]+'''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
     # Parse polygons
     if hasattr(place,"MultiGeometry"):
         poly = place.MultiGeometry.Polygon;
-        s=s+'''"MultiPolygon","coordinates":[['''
+        s=s+'''"MultiPolygon","coordinates":[ [ '''
     else:
         poly = place.Polygon;
-        s=s+'''"Polygon","coordinates":['''
+        s=s+'''"Polygon","coordinates":[ '''
         
     # Loop over geometries
     for i,pol in enumerate(poly):
         pol = str(pol.outerBoundaryIs.LinearRing.coordinates)
-        p = np.array([x.split(',') for x in (pol.split(' '))]).astype(np.float)
-        s=s+np.array_str(p).replace('\n',', ')
+        # Old way
+        #p = np.array([x.split(',') for x in (pol.split(' '))]).astype(np.float)
+        #s=s+np.array_str(p).replace('\n',', ')
+        
+        arr = np.array([np.fromstring(x,dtype=np.float,sep=',') for x in pol.split(' ')])
+        s+=np.array2string(arr,separator=',').replace('\n','').replace(' ','')
 
         # Write comma if multiple polygons
         if len(poly)-1 == i:
-            s=s+''']]}}'''
+            # Support for MultiGeometry
+            if hasattr(place,"MultiGeometry"):
+                s=s+''']] } }'''
+            else:
+                s=s+'''] } }'''
         else:
-            s=s+'''],['''
-            
+            s=s+''' ], [ '''
 
-    s = s+']}'
     return s;
+
+'''
+This function writes the ende of file
+'''
+def WriteFooter():
+    return '\n]\n}'
 
 ######################
 #   Facebook Post    #
@@ -79,26 +271,39 @@ def ParseFacebook(post):
 
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
-    zipcode = int(szipcode[0])
+
+    if len(szipcode) > 0:
+        zipcode = int(szipcode[0])
     
-    # Fix combined zipcodes
-    if zipcode < 1500:
-        zipcode = "1000 - 1499"
-    elif zipcode >= 1500 and zipcode < 1800:                                        zipcode = "1500 - 1799"
-    elif zipcode >= 1800 and zipcode < 2000:                                        zipcode = "1800 - 1999"
+        # Fix combined zipcodes
+        if zipcode < 1500:
+            zipcode = "1000 - 1499"
+        elif zipcode >= 1500 and zipcode < 1800:                                        zipcode = "1500 - 1799"
+        elif zipcode >= 1800 and zipcode < 2000:                                        zipcode = "1800 - 1999"
 
-    # Validate zipcode
-    cur.execute("SELECT * FROM Zips WHERE zip == '"+str(zipcode)+"'")
-    z = cur.fetchone();
+        # Validate zipcode
+        cur.execute("SELECT * FROM Zips WHERE zip == '"+str(zipcode)+"'")
+        z = cur.fetchone();
 
-    if (z is None):
-        print("Invalid zipcode!");
+        if (z is None):
+            print("Invalid zipcode!");
+        else:
+            # Get town
+            town = z[0]
+
+        return [name,date,zipcode,town,lat,lon,image]
     else:
-        # Get town
-        town = z[0]
-
-    return [name,date,zipcode,town,lat,lon,image]
-
+        print("Invalid post!")
+        print(msg)
+        return None
+    
+'''
+####################
+#                  #
+#  DATABASE FUNC   #
+#                  #
+####################
+'''
 # Create the database
 def CreateDatabase(cur):
     cur.execute("CREATE TABLE Participants(Userid INT PRIMARY KEY, Name TEXT UNIQUE, Joined_on DATE)")
@@ -130,80 +335,112 @@ def UpdateBeerDatabase(cur,
 def UpdateUserDatabase(cur,userdb):
     cur.execute('''INSERT OR IGNORE INTO Participants(name) VALUES(?)''',(userdb,))
 
+'''
+Main function
 
+- Sets up connection to database
+- Checks facebook for updates
+- Writes new beers and users to the database
+- Updates the main map
+'''
+if __name__ == "__main__":
+    con = None
     
-# Connect to database
-try:
-    con = lite.connect('pdr.db')
-    
-    cur = con.cursor()    
-    cur.execute('SELECT SQLITE_VERSION()')
-    
-    data = cur.fetchone()
-    
-    print "SQLite version: %s" % data                
-    
-except lite.Error, e:
-    
-    print "Error %s:" % e.args[0]
-    sys.exit(1)
-    
-        
-#CreateDatabase(cur)
-#for u in parti:
-#    print(u[0])
-#    UpdateUserDatabase(cur,u[0])
+    # Connect to database
+    try:
+        con = lite.connect('pdr.db')
+        cur = con.cursor()    
 
-#cur.execute('SELECT * FROM Participants;')
-#print(cur.fetchall())
-#con.commit()
+    except lite.Error, e:
 
-stats = []
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
 
-############################
-#     FACEBOOK STUFF       #
-############################
-# First visit https://developers.facebook.com/tools/explorer for an one hour token
-token=str(np.loadtxt('token.txt',dtype=np.str))
 
-facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since=1438372800&limit=100&date_format=U'
+    stats = []
+    offline=False
 
-print("Fetching data from Facebook")
-response = urllib2.urlopen(facebookurl)
+    ############################
+    #     FACEBOOK STUFF       #
+    ############################
+    # First visit https://developers.facebook.com/tools/explorer for an one hour token
+    token=str(np.loadtxt('token.txt',dtype=np.str))
 
-# Check for HTTP codes other than 200
-if response.code != 200:
-    print('Status:', response.code, 'Problem with the request. Exiting.')
-    exit()
+    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since=1438372800&limit=100&date_format=U'
 
-# Decode the JSON response into a dictionary and use the data
-jsondata = response.read()
-data = json.loads(jsondata)
+    print("Fetching data from Facebook")
+    if offline is True:
+        with open('../offline_feed_06_08_2015.json') as jsondata:
+            data = json.load(jsondata)
+    else:
+        response = urllib2.urlopen(facebookurl)
 
-############################
-#    Get ZIP POLYGONS      #
-############################
-root = parser.fromstring(open('Danske_postnumre.kml','r').read())
+        # Check for HTTP codes other than 200
+        if response.code != 200:
+            print('Status:', response.code, 'Problem with the request. Exiting.')
+            exit()
 
-# Get Placemarks
-PM = root.Document.findall("Placemark")
-PMN = root.Document.findall("Placemark/name")
+        # Decode the JSON response into a dictionary and use the data
+        jsondata = response.read()
+        data = json.loads(jsondata)
 
-############################
-#      UPDATE TABLE        #
-############################
-for post in data['data']:
-    if ('picture' in post) and ('www.google.com' not in post['picture']) and ('message' in post):
-        entry = ParseFacebook(post)
-        UpdateBeerDatabase(cur,entry)
-        con.commit()
-        
-############################
-#      WRITE MAP DATA      #
-############################
+    ############################
+    #    Get ZIP POLYGONS      #
+    ############################
+    root = parser.fromstring(open('Danske_postnumre.kml','r').read())
+
+    # Get Placemarks
+    PM = root.Document.findall("Placemark")
+    PMN = [str(x) for x in root.Document.findall("Placemark/name")]
+
+    ############################
+    #      UPDATE TABLE        #
+    ############################
+    for post in data['data']:
+        if ('picture' in post) and ('www.google.com' not in post['picture']) and ('message' in post):
+            entry = ParseFacebook(post)
+
+            # Check for new participants
+            cur.execute('SELECT * FROM Participants WHERE Name = "'+entry[0]+'";')
+            if cur.fetchone() is None:
+                print("Found new participant.. "+entry[0]+".. Adding to DB!")
+                UpdateUserDatabase(cur,entry[0])
+
+            # Commit beer entry to database
+            if entry is not None:
+                UpdateBeerDatabase(cur,entry)
+                con.commit()
+
+    ############################
+    #      WRITE MAP DATA      #
+    ############################
     # Get data for zipcode
-#    place = PM[PMN.index(entry[2])]
-#    print(WriteDataFile(entry,place))
-#            print(p)
+    cur.execute('SELECT * FROM Participants;')
+    participants = cur.fetchall()
+    for p in participants:
+        cur.execute('SELECT * FROM Beers WHERE Participant = "'+p[1]+'";')
+        s = WriteHeader(p[1].encode('ascii','ignore'));
 
-con.close()
+        beers = cur.fetchall()
+        for i,b in enumerate(beers):
+            try:
+                place = PM[PMN.index(str(b[3]))]    
+            except e:    
+                print "Error %s:" % e.args[0]
+                sys.exit(1)
+
+            s=s+WritePolygon(b,place)
+
+            if i < len(beers)-1:
+                s += ',\n'
+
+
+        s += WriteFooter()
+
+        with open('/tmp/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+            f.write(s.encode('utf-8'))
+
+    con.close()
+
+    WriteMap(participants)
+
