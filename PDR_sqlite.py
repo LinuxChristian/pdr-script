@@ -138,7 +138,7 @@ def WriteMapFooter(parti):
     return this._div;
     };
     title.update = function () {
-    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: 04/08-2015'
+    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: '''+datetime.date.today().strftime("%d %b %Y")+''' '
     };
     title.addTo(map);
     var baseMaps = {
@@ -179,7 +179,7 @@ def WriteMap(plist):
 
     s+=WriteMapFooter(plist)
 
-    with open('/tmp/index.html','w') as f:
+    with open('/tmp/maps/index.html','w') as f:
         f.write(s.encode('utf-8'))
 
 '''
@@ -437,10 +437,47 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/tmp/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/tmp/maps/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
-
-    con.close()
 
     WriteMap(participants)
 
+'''
+ COMPUTE STATISTICS
+'''
+
+cur.execute("SELECT Participant,count(),count()/593.0,(julianday('2020-08-01')-julianday('now'))/(593.0-count()) FROM Beers GROUP BY Participant ORDER BY count() DESC")
+
+stats = pd.DataFrame(cur.fetchall())
+stats.columns = ["Navn","Postnumre","Dækning antal (%)","DPP*"]
+
+s=u'''<link rel="stylesheet" type="text/css" href="table.css">
+ <table style="text-align: center;">
+  <thead>
+    <tr style="text-align: center; width="100%"">
+      <th>Føre</th>
+      <th>Sprinter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img width="150px" height="120px" src="yellow.png"></img></td>
+      <td><img width="150px" height="120px" src="green.png"></img></td>
+    </tr>
+    <tr>
+      <td>'''+stats["Navn"][0]+'''</td>
+      <td>?????</td>
+    </tr>
+  </tbody>
+ </table>
+</br>
+'''
+s+=stats.to_html(index=False,classes=["scoreboard"])
+
+
+with open("/tmp/table.html", "w") as text_file:
+    text_file.write(s.encode('utf-8'))
+
+con.close()
+
+print("DONE!")
