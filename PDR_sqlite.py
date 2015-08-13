@@ -244,10 +244,10 @@ def WritePolygon(data,place):
             else:
                 s=s+''' ], [ '''
 
-        except:
-            print("Failed to parse record!")
-            print(data)
-            print(place)
+    except:
+        print("Failed to parse record!")
+        print(data)
+        print(place)
 
     return s;
 
