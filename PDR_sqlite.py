@@ -130,7 +130,38 @@ INPUT:
 parti - List of participants
 '''
 def WriteMapFooter(parti):
+    # Write all zipcodes to map
     s = '''
+    function pop_Danskepostnumreper1juli2008(feature, layer) {					
+    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['Name'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['DISTNAME'])) + '</td></tr></table>';
+            layer.bindPopup(popupContent);
+    }
+
+    function doStyleDanskepostnumreper1juli2008(feature) {
+                    return {
+                            color: '#000000',
+                            fillColor: '#4706d4',
+                            weight: 1.3,
+                            dashArray: '0',
+                            opacity: 1.0,
+                            fillOpacity: 1.0
+                    };
+
+    }
+    var exp_Danskepostnumreper1juli2008JSON = new L.geoJson(exp_Danskepostnumreper1juli2008,{
+            onEachFeature: pop_Danskepostnumreper1juli2008,
+            style: doStyleDanskepostnumreper1juli2008
+    });
+    layerOrder[layerOrder.length] = exp_Danskepostnumreper1juli2008JSON;
+    for (index = 0; index < layerOrder.length; index++) {
+            feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
+    }
+    //add comment sign to hide this layer on the map in the initial view.
+    feature_group.addLayer(exp_Danskepostnumreper1juli2008JSON);
+
+    '''
+    
+    s += '''
     feature_group.addTo(map);
     var title = new L.Control();
     title.onAdd = function (map) {
@@ -145,7 +176,7 @@ def WriteMapFooter(parti):
     var baseMaps = {
     'Thunderforest Outdoors': basemap_0
     };
-    L.control.layers(baseMaps,{'''
+    L.control.layers(baseMaps,{"Alle Postnummer": exp_Danskepostnumreper1juli2008JSON,'''
 
     for i,p in enumerate(parti):
         shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
@@ -296,7 +327,6 @@ def ParseFacebook(post):
         # Validate zipcode
         cur.execute("SELECT * FROM Zips WHERE zip == '"+str(zipcode)+"'")
         z = cur.fetchone();
-
             
         if (z is None):
             print("Invalid zipcode!");
