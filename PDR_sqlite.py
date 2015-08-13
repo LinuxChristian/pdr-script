@@ -10,6 +10,7 @@ import urllib,urllib2
 import datetime
 import numpy as np
 import sys
+import time
 
 # SQLite libs
 import sqlite3 as lite
@@ -347,6 +348,21 @@ def ParseFacebook(post):
 #                  #
 ####################
 '''
+
+# Fill initial values of visitors in Zip and points
+# NOTE: THIS FUNC SHOULD ONLY BE CALLED ONCE
+def InitVisitors(cur):
+    # Get all zips
+    cur.execute("SELECT * FROM Zips")
+    zips=cur.fetchall()
+
+    # Loop over all zips
+    for z in zips:
+        cur.execute("SELECT count(*) FROM Beers WHERE Zipcode == "+z[1])
+        res = cur.fetchall()
+        # Insert count into table
+        cur.execute("INSERT INTO Zips(Visitors) VALUES (?)",res[0])
+        
 # Create the database
 def CreateDatabase(cur):
     cur.execute("CREATE TABLE Participants(Userid INT PRIMARY KEY, Name TEXT UNIQUE, Joined_on DATE)")
@@ -364,9 +380,8 @@ def UpdateBeerDatabase(cur,
     lon = e[3] # Longitude
     beer = None # Name of beer
 
-    # OR IGNORE
     cur.execute('''INSERT OR REPLACE INTO Beers(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
-
+    
     # Update with GPS
     if lat is not None and lon is not None:
         cur.execute('''INSERT INTO Beers(Lat,Lon) VALUES(?,?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(lat,lon))
@@ -375,6 +390,8 @@ def UpdateBeerDatabase(cur,
     if beer is not None:
         cur.execute('''INSERT INTO Beers(Beer) VALUES(?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(beer))
 
+    # Update visitor database
+    
 def UpdateUserDatabase(cur,userdb):
     cur.execute('''INSERT OR IGNORE INTO Participants(name) VALUES(?)''',(userdb,))
 
@@ -403,13 +420,19 @@ if __name__ == "__main__":
     stats = []
     offline=True
 
+    # Get last update in epoch time
+    cur.execute("SELECT Drank_on FROM Beers ORDER BY Drank_on DESC")
+    latest=int(time.mktime(time.strptime(cur.fetchone()[0],'%Y-%m-%d %H:%M:%S')))
+    print(latest)
+    
     ############################
     #     FACEBOOK STUFF       #
     ############################
     # First visit https://developers.facebook.com/tools/explorer for an one hour token
     token=str(np.loadtxt('token.txt',dtype=np.str))
 
-    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since=1438372800&limit=100&date_format=U'
+    # August 1th in epoch 1438372800
+    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since='+str(latest)+'&limit=100&date_format=U'
 
     print("Fetching data from Facebook")
     if offline is True:
@@ -453,7 +476,7 @@ if __name__ == "__main__":
             if entry is not None:
                 UpdateBeerDatabase(cur,entry)
                 con.commit()
-
+                
     ############################
     #      WRITE MAP DATA      #
     ############################
