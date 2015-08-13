@@ -9,6 +9,7 @@ import urllib,urllib2
 # General libs
 import datetime
 import numpy as np
+import sys
 
 # SQLite libs
 import sqlite3 as lite
@@ -60,7 +61,7 @@ def WriteMapIndex(parti):
 
     # Add list of user data files
     for p in parti:
-        print(p[1])
+#        print(p[1])
         s+='<script src="latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js"></script>\n'
 
     s+='''
@@ -207,8 +208,14 @@ Polygons can either be single or in a
 multipolygon structure.
 '''
 def WritePolygon(data,place):
-# 
-    s = '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]+'''","Postnummer":"'''+str(data[3])+'''","By":"'''+data[2]+'''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
+#
+    s = ""
+    try:
+        s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]+'''","Postnummer":"'''+str(data[3])+'''","By":"'''+data[2]+'''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
+    except:
+        print(data)
+        print(place)
+        
     # Parse polygons
     if hasattr(place,"MultiGeometry"):
         poly = place.MultiGeometry.Polygon;
@@ -263,8 +270,8 @@ def ParseFacebook(post):
     name = post["from"]["name"]
         
     # Grab GPS if it exists
-    if "place" in post:
-        print("Found GPS data.. haps haps haps")
+#    if "place" in post:
+#        print("Found GPS data.. haps haps haps")
         
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
@@ -322,7 +329,7 @@ def UpdateBeerDatabase(cur,
     beer = None # Name of beer
 
     # OR IGNORE
-    cur.execute('''INSERT OR IGNORE INTO Beers(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
+    cur.execute('''INSERT OR REPLACE INTO Beers(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
 
     # Update with GPS
     if lat is not None and lon is not None:
@@ -446,27 +453,57 @@ if __name__ == "__main__":
  COMPUTE STATISTICS
 '''
 
+# Compute participant stats
 cur.execute("SELECT Participant,count(),count()/593.0,(julianday('2020-08-01')-julianday('now'))/(593.0-count()) FROM Beers GROUP BY Participant ORDER BY count() DESC")
 
 stats = pd.DataFrame(cur.fetchall())
 stats.columns = ["Navn","Postnumre","Dækning antal (%)","DPP*"]
 
+
+# Compute area visited
+cur.execute("SELECT sum(Zips.area) FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
+area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
+
+# Fetch beers the last 7 days - Old Green Jersy
+#cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= datetime('now','-7 days') GROUP BY Participant")
+
+cur.execute("SELECT Participant, count(*) FROM (SELECT * FROM Beers GROUP BY Zipcode ORDER BY Drank_on) GROUP BY Participant")
+rate=pd.DataFrame(cur.fetchall())
+rate.columns = ["Navn","FIP"]
+stats=pd.merge(stats,rate,on="Navn")
+
+#stmp=stats.copy(deep=True)
+yellow=stats["Navn"][0]
+green=(stats.sort("FIP",ascending=False))["Navn"].iloc[0]
+
+if (yellow == green):
+    green=(stats.sort("FIP",ascending=False))["Navn"].iloc[1]
+
+polka=(stats.sort("Area",ascending=False))["Navn"].iloc[0]
+if (yellow == polka):
+    polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]
+
+stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","FIP"]
+
 s=u'''<link rel="stylesheet" type="text/css" href="table.css">
- <table style="text-align: center;">
+ <table align="center" class="jersy">
   <thead>
-    <tr style="text-align: center; width="100%"">
+    <tr width="75%">
       <th>Føre</th>
       <th>Sprinter</th>
+      <th>Areal</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><img width="150px" height="120px" src="yellow.png"></img></td>
       <td><img width="150px" height="120px" src="green.png"></img></td>
+      <td><img width="150px" height="120px" src="polkadot.png"></img></td>
     </tr>
     <tr>
-      <td>'''+stats["Navn"][0]+'''</td>
-      <td>?????</td>
+      <td>'''+yellow+'''</td>
+      <td>'''+green+'''</td>
+      <td>'''+polka+'''</td>
     </tr>
   </tbody>
  </table>
