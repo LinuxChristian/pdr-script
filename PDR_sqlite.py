@@ -211,38 +211,43 @@ def WritePolygon(data,place):
 #
     s = ""
     try:
-        s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]+'''","Postnummer":"'''+str(data[3])+'''","By":"'''+data[2]+'''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
-    except:
-        print(data)
-        print(place)
+        s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]
+        s += '''","Postnummer":"'''+str(data[3])
+        s += '''","By":"'''+data[2]
+        s += '''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
         
-    # Parse polygons
-    if hasattr(place,"MultiGeometry"):
-        poly = place.MultiGeometry.Polygon;
-        s=s+'''"MultiPolygon","coordinates":[ [ '''
-    else:
-        poly = place.Polygon;
-        s=s+'''"Polygon","coordinates":[ '''
-        
-    # Loop over geometries
-    for i,pol in enumerate(poly):
-        pol = str(pol.outerBoundaryIs.LinearRing.coordinates)
-        # Old way
-        #p = np.array([x.split(',') for x in (pol.split(' '))]).astype(np.float)
-        #s=s+np.array_str(p).replace('\n',', ')
-        
-        arr = np.array([np.fromstring(x,dtype=np.float,sep=',') for x in pol.split(' ')])
-        s+=np.array2string(arr,separator=',').replace('\n','').replace(' ','')
-
-        # Write comma if multiple polygons
-        if len(poly)-1 == i:
-            # Support for MultiGeometry
-            if hasattr(place,"MultiGeometry"):
-                s=s+''']] } }'''
-            else:
-                s=s+'''] } }'''
+        # Parse polygons
+        if hasattr(place,"MultiGeometry"):
+            poly = place.MultiGeometry.Polygon;
+            s=s+'''"MultiPolygon","coordinates":[ [ '''
         else:
-            s=s+''' ], [ '''
+            poly = place.Polygon;
+            s=s+'''"Polygon","coordinates":[ '''
+
+        # Loop over geometries
+        for i,pol in enumerate(poly):
+            pol = str(pol.outerBoundaryIs.LinearRing.coordinates)
+            # Old way
+            #p = np.array([x.split(',') for x in (pol.split(' '))]).astype(np.float)
+            #s=s+np.array_str(p).replace('\n',', ')
+
+            arr = np.array([np.fromstring(x,dtype=np.float,sep=',') for x in pol.split(' ')])
+            s+=np.array2string(arr,separator=',').replace('\n','').replace(' ','')
+
+            # Write comma if multiple polygons
+            if len(poly)-1 == i:
+                # Support for MultiGeometry
+                if hasattr(place,"MultiGeometry"):
+                    s=s+''']] } }'''
+                else:
+                    s=s+'''] } }'''
+            else:
+                s=s+''' ], [ '''
+
+        except:
+            print("Failed to parse record!")
+            print(data)
+            print(place)
 
     return s;
 
@@ -278,7 +283,7 @@ def ParseFacebook(post):
 
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
-
+    
     if len(szipcode) > 0:
         zipcode = int(szipcode[0])
     
@@ -287,11 +292,12 @@ def ParseFacebook(post):
             zipcode = "1000 - 1499"
         elif zipcode >= 1500 and zipcode < 1800:                                        zipcode = "1500 - 1799"
         elif zipcode >= 1800 and zipcode < 2000:                                        zipcode = "1800 - 1999"
-
+        
         # Validate zipcode
         cur.execute("SELECT * FROM Zips WHERE zip == '"+str(zipcode)+"'")
         z = cur.fetchone();
 
+            
         if (z is None):
             print("Invalid zipcode!");
         else:
@@ -365,7 +371,7 @@ if __name__ == "__main__":
 
 
     stats = []
-    offline=False
+    offline=True
 
     ############################
     #     FACEBOOK STUFF       #
@@ -514,6 +520,7 @@ s+=stats.to_html(index=False,classes=["scoreboard"])
 
 with open("/tmp/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
+
 
 con.close()
 
