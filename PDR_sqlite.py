@@ -58,7 +58,11 @@ def WriteMapIndex(parti):
             </head>
             <body>
                     <div id="map"></div>
-                    <input id="slide" type="range" min="0" max="1" step="0.1" value="1" onchange="updateOpacity(this.value)">\n'''
+                    <input id="slide" type="range" min="0" max="1" step="0.1" value="1" onchange="updateOpacity(this.value)">\n
+<script src="latest/exp_Sjaelland.js"></script>
+<script src="latest/exp_Fyn.js"></script>
+<script src="latest/exp_Jylland.js"></script>\
+'''
 
     # Add list of user data files
     for p in parti:
@@ -133,32 +137,41 @@ parti - List of participants
 def WriteMapFooter(parti):
     # Write all zipcodes to map
     s = '''
-    function pop_Danskepostnumreper1juli2008(feature, layer) {					
-    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['Name'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['DISTNAME'])) + '</td></tr></table>';
+    function pop_Postnumre(feature, layer) {					
+    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['POSTNR_TXT'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['POSTBYNAVN'])) + '</td></tr></table>';
             layer.bindPopup(popupContent);
     }
 
-    function doStyleDanskepostnumreper1juli2008(feature) {
+    function doStyleDanskepostnumre(feature) {
                     return {
                             color: '#000000',
                             fillColor: '#4706d4',
-                            weight: 1.3,
+                            weight: 0.5,
                             dashArray: '0',
                             opacity: 1.0,
-                            fillOpacity: 1.0
+                            fillOpacity: 0.0
                     };
 
     }
-    var exp_Danskepostnumreper1juli2008JSON = new L.geoJson(exp_Danskepostnumreper1juli2008,{
-            onEachFeature: pop_Danskepostnumreper1juli2008,
-            style: doStyleDanskepostnumreper1juli2008
+    var exp_SjaellandJSON = new L.geoJson(exp_Sjaelland,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
     });
-    layerOrder[layerOrder.length] = exp_Danskepostnumreper1juli2008JSON;
-    for (index = 0; index < layerOrder.length; index++) {
-            feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
+    layerOrder[layerOrder.length] = exp_SjaellandJSON;
+
+    var exp_FynJSON = new L.geoJson(exp_Fyn,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
+    });
+    layerOrder[layerOrder.length] = exp_FynJSON;
+
+    var exp_JyllandJSON = new L.geoJson(exp_Jylland,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
+    });
+    layerOrder[layerOrder.length] = exp_JyllandJSON;
+
     }
-    //add comment sign to hide this layer on the map in the initial view.
-    feature_group.addLayer(exp_Danskepostnumreper1juli2008JSON);
 
     '''
     
@@ -177,7 +190,10 @@ def WriteMapFooter(parti):
     var baseMaps = {
     'Thunderforest Outdoors': basemap_0
     };
-    L.control.layers(baseMaps,{"Alle Postnummer": exp_Danskepostnumreper1juli2008JSON,'''
+    L.control.layers(baseMaps,{"Sjaelland": exp_SjaellandJSON,
+    "Fyn": exp_FynJSON,
+    "Jylland": exp_JyllandJSON,
+    '''
 
     for i,p in enumerate(parti):
         shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
@@ -185,7 +201,7 @@ def WriteMapFooter(parti):
         if i < len(parti)-1:
             s+=','
             
-    s+='''},{collapsed:false}).addTo(map);
+    s+='''},{collapsed:true}).addTo(map);
     function updateOpacity(value) {
     }
     L.control.scale({options: {position: 'bottomleft',maxWidth: 100,metric: true,imperial: false,updateWhenIdle: false}}).addTo(map);
@@ -418,23 +434,24 @@ if __name__ == "__main__":
 
 
     stats = []
-    offline=True
+    offline=False
 
     # Get last update in epoch time
     cur.execute("SELECT Drank_on FROM Beers ORDER BY Drank_on DESC")
-    latest=int(time.mktime(time.strptime(cur.fetchone()[0],'%Y-%m-%d %H:%M:%S')))
-    print(latest)
+    latest=cur.fetchone()[0]
+    latest_epoch=int(time.mktime(time.strptime(latest,'%Y-%m-%d %H:%M:%S')))
     
     ############################
     #     FACEBOOK STUFF       #
     ############################
     # First visit https://developers.facebook.com/tools/explorer for an one hour token
+    # See http://stackoverflow.com/questions/12168452/long-lasting-fb-access-token-for-server-to-pull-fb-page-info#
     token=str(np.loadtxt('token.txt',dtype=np.str))
 
     # August 1th in epoch 1438372800
-    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since='+str(latest)+'&limit=100&date_format=U'
+    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since='+str(latest_epoch)+'&limit=100&date_format=U'
 
-    print("Fetching data from Facebook")
+    print("Fetching data from Facebook after "+latest)
     if offline is True:
         with open('../offline_feed_06_08_2015.json') as jsondata:
             data = json.load(jsondata)
@@ -459,6 +476,8 @@ if __name__ == "__main__":
     PM = root.Document.findall("Placemark")
     PMN = [str(x) for x in root.Document.findall("Placemark/name")]
 
+    print("Found "+str(len(data['data']))+" records")
+    
     ############################
     #      UPDATE TABLE        #
     ############################
