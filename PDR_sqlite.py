@@ -25,6 +25,27 @@ from matplotlib import cm
 
 # Data wrangeling
 import pandas as pd
+from collections import OrderedDict
+
+'''
+####################
+#                  #
+# HELPER FUNCTIONS #
+#                  #
+####################
+'''
+
+'''
+This function returns the epoch time from each json
+response from facebook. This can then be used to sort
+the facebook posts.
+
+'''
+def json_time(json):
+    try:
+        return int(json["created_time"])
+    except KeyError:
+        return 0
 
 '''
 ####################
@@ -366,20 +387,12 @@ def ParseFacebook(post):
 ####################
 '''
 
-# Fill initial values of visitors in Zip and points
-# NOTE: THIS FUNC SHOULD ONLY BE CALLED ONCE
-def InitVisitors(cur):
-    # Get all zips
-    cur.execute("SELECT * FROM Zips")
-    zips=cur.fetchall()
-
-    # Loop over all zips
-    for z in zips:
-        cur.execute("SELECT count(*) FROM Beers WHERE Zipcode == "+z[1])
-        res = cur.fetchall()
-        # Insert count into table
-        cur.execute("INSERT INTO Zips(Visitors) VALUES (?)",res[0])
-        
+def ResetPoints(cur,con):
+    cur.execute('UPDATE Participants SET First = 0, Points = 0')
+    cur.execute('UPDATE Zips SET Visitors = 0')
+    cur.execute('DELETE FROM Beers')
+    con.commit()
+    
 # Create the database
 def CreateDatabase(cur):
     cur.execute("CREATE TABLE Participants(Userid INT PRIMARY KEY, Name TEXT UNIQUE, Joined_on DATE)")
@@ -397,21 +410,74 @@ def UpdateBeerDatabase(cur,
     lon = e[3] # Longitude
     beer = None # Name of beer
 
-    cur.execute('''INSERT OR REPLACE INTO Beers(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
+    print("Updating User "+name)
+    print("With zipcode "+str(zipcode)+" and town "+city)
+    print("Drank on "+str(date))
+    print("")
     
+    # Update drinking information
+    cur.execute('''INSERT OR REPLACE INTO tmp(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
+
     # Update with GPS
     if lat is not None and lon is not None:
-        cur.execute('''INSERT INTO Beers(Lat,Lon) VALUES(?,?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(lat,lon))
+        cur.execute('''INSERT INTO tmp(Lat,Lon) VALUES(?,?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(lat,lon))
 
     # Update with beer name
     if beer is not None:
-        cur.execute('''INSERT INTO Beers(Beer) VALUES(?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(beer))
+        cur.execute('''INSERT INTO tmp(Beer) VALUES(?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(beer))
 
     # Update visitor database
     
 def UpdateUserDatabase(cur,userdb):
     cur.execute('''INSERT OR IGNORE INTO Participants(name) VALUES(?)''',(userdb,))
 
+
+def UpdatePoints(cur,e):
+    name=e[0]#.decode('unicode-escape') # Participant name
+    date=e[1] # Beer drank on date
+    city=e[2]
+    zipcode=e[3]
+
+    # Get current visitors
+    cur.execute('SELECT Visitors FROM Zips WHERE Zip == "'+str(zipcode)+'"')
+    visitors=cur.fetchone()[0]
+    
+    points=0
+    if visitors == 0:            
+        # Register first person in zipcode
+        print(name+" is first in Zip "+str(zipcode)+"!")
+        cur.execute('UPDATE Participants SET First = (SELECT First FROM Participants WHERE Name == "'+name+'")+1  WHERE Name == "'+name+'"')
+
+    visitors+=1
+    if (visitors == 1):
+        points = 10
+    elif visitors == 2:
+        points = 8
+    elif visitors == 3:
+        points = 6
+    elif visitors == 4:
+        points = 5
+    elif visitors == 5:
+        points = 4
+    elif visitors == 6:
+        points = 3
+    elif visitors == 7:
+        points = 2
+    elif visitors == 8:
+        points = 1
+
+    # Update participants points
+    cur.execute('UPDATE Participants SET Points = (SELECT Points FROM Participants WHERE Name == "'+name+'")+'+str(points)+'  WHERE Name == "'+name+'"')
+
+    # Update visited counter
+    cur.execute('UPDATE Zips SET Visitors = '+str(visitors)+' WHERE Zip == "'+str(zipcode)+'"')
+
+
+
+
+
+
+    
 '''
 Main function
 
@@ -439,8 +505,13 @@ if __name__ == "__main__":
 
     # Get last update in epoch time
     cur.execute("SELECT Drank_on FROM Beers ORDER BY Drank_on DESC")
-    latest_epoch=cur.fetchone()[0]
-    
+    latest_epoch=cur.fetchone()
+
+    if latest_epoch is None:
+        latest_epoch = float(1438372800)
+    else:
+        latest_epoch=latest_epoch[0]
+        
     ############################
     #     FACEBOOK STUFF       #
     ############################
@@ -449,10 +520,10 @@ if __name__ == "__main__":
     token=str(np.loadtxt('token.txt',dtype=np.str))
 
     # August 1th in epoch 1438372800
-    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?fields=full_picture,message,from,id,link,created_time&date_format=U&access_token='+token+'&since='+str(latest_epoch)
-    # 1630748980524187/feed?access_token='+token+'&since='+str(latest_epoch)+'&limit=100&date_format=U'
+    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?fields=full_picture,message,from,id,link,created_time&date_format=U&access_token='+token+'&since='+str(latest_epoch)+'&limit=1000'
 
-    print("Fetching data from Facebook after "+latest)
+    print("Fetching data from Facebook after "+datetime.datetime.fromtimestamp(float(latest_epoch)).strftime('%Y-%m-%d %H:%M:%S'))
+    
     if offline is True:
         with open('../offline_feed_06_08_2015.json') as jsondata:
             data = json.load(jsondata)
@@ -467,7 +538,7 @@ if __name__ == "__main__":
         # Decode the JSON response into a dictionary and use the data
         jsondata = response.read()
         data = json.loads(jsondata)
-
+        
     ############################
     #    Get ZIP POLYGONS      #
     ############################
@@ -480,23 +551,40 @@ if __name__ == "__main__":
     print("Found "+str(len(data['data']))+" records")
     
     ############################
-    #      UPDATE TABLE        #
+    #  INSERT INTO TMP TABLE   #
     ############################
+    # Create TMP Database
+    cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
+    con.commit()
+    
     for post in data['data']:
         if ('full_picture' in post) and ('message' in post):
             entry = ParseFacebook(post)
 
-            # Check for new participants
-            cur.execute('SELECT * FROM Participants WHERE Name = "'+entry[0]+'";')
-            if cur.fetchone() is None:
-                print("Found new participant.. "+entry[0]+".. Adding to DB!")
-                UpdateUserDatabase(cur,entry[0])
-
-            # Commit beer entry to database
             if entry is not None:
+                # Check for new participants
+                cur.execute('SELECT * FROM Participants WHERE Name = "'+entry[0]+'";')
+                if cur.fetchone() is None:
+                    print("Found new participant.. "+entry[0]+".. Adding to DB!")
+                    UpdateUserDatabase(cur,entry[0])
+
+                # Commit beer entry to database
                 UpdateBeerDatabase(cur,entry)
                 con.commit()
-                
+    
+    ############################
+    #      UPDATE TABLE        #
+    ############################
+    cur.execute("INSERT INTO Beers SELECT * FROM tmp ORDER BY Drank_on ASC")
+
+    # Give out points
+    cur.execute("SELECT * FROM tmp ORDER BY Drank_on ASC")
+    for reg in cur.fetchall():
+        UpdatePoints(cur,reg)
+    
+    cur.execute("DROP TABLE tmp")
+    con.commit()
+
     ############################
     #      WRITE MAP DATA      #
     ############################
