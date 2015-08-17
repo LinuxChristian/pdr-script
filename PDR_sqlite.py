@@ -383,7 +383,7 @@ def InitVisitors(cur):
 # Create the database
 def CreateDatabase(cur):
     cur.execute("CREATE TABLE Participants(Userid INT PRIMARY KEY, Name TEXT UNIQUE, Joined_on DATE)")
-    cur.execute("CREATE TABLE Beers(Participant TEXT, Drank_on DATE, City TEXT, Zipcode INT, Image TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
+    cur.execute("CREATE TABLE Beers(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
 
 
 def UpdateBeerDatabase(cur,
