@@ -318,17 +318,17 @@ def ParseFacebook(post):
     date=None
     town=None
     
-    t = datetime.datetime.fromtimestamp(float(post["created_time"]))
-    date = t.strftime('%Y-%m-%d %H:%M:%S')
+    date = int(post["created_time"])
     name = post["from"]["name"]
         
     # Grab GPS if it exists
-#    if "place" in post:
-#        print("Found GPS data.. haps haps haps")
+    if "place" in post:
+        print("Found GPS data.. haps haps haps")
+        lat = float(post["place"]["location"]["latitude"])
+        lon = float(post["place"]["location"]["longitude"])
         
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
-    print(msg)
     
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
@@ -342,7 +342,7 @@ def ParseFacebook(post):
         elif zipcode >= 1500 and zipcode < 1800:                                        zipcode = "1500 - 1799"
         elif zipcode >= 1800 and zipcode < 2000:                                        zipcode = "1800 - 1999"
         
-        # Validate zipcode
+        # Validate zipcode and grab zipcode name
         cur.execute("SELECT * FROM Zips WHERE zip == '"+str(zipcode)+"'")
         z = cur.fetchone();
             
@@ -439,8 +439,7 @@ if __name__ == "__main__":
 
     # Get last update in epoch time
     cur.execute("SELECT Drank_on FROM Beers ORDER BY Drank_on DESC")
-    latest=cur.fetchone()[0]
-    latest_epoch=int(time.mktime(time.strptime(latest,'%Y-%m-%d %H:%M:%S')))
+    latest_epoch=cur.fetchone()[0]
     
     ############################
     #     FACEBOOK STUFF       #
