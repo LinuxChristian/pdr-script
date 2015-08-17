@@ -328,7 +328,8 @@ def ParseFacebook(post):
         
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
-
+    print(msg)
+    
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
     
@@ -449,7 +450,8 @@ if __name__ == "__main__":
     token=str(np.loadtxt('token.txt',dtype=np.str))
 
     # August 1th in epoch 1438372800
-    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?access_token='+token+'&since='+str(latest_epoch)+'&limit=100&date_format=U'
+    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?fields=full_picture,message,from,id,link,created_time&date_format=U&access_token='+token+'&since='+str(latest_epoch)
+    # 1630748980524187/feed?access_token='+token+'&since='+str(latest_epoch)+'&limit=100&date_format=U'
 
     print("Fetching data from Facebook after "+latest)
     if offline is True:
@@ -482,7 +484,7 @@ if __name__ == "__main__":
     #      UPDATE TABLE        #
     ############################
     for post in data['data']:
-        if ('picture' in post) and ('www.google.com' not in post['picture']) and ('message' in post):
+        if ('full_picture' in post) and ('message' in post):
             entry = ParseFacebook(post)
 
             # Check for new participants
