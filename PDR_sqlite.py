@@ -28,7 +28,10 @@ import pandas as pd
 from collections import OrderedDict
 
 # Turn off pandas column width limitor
-pd.set_option('display.max_colwidth', -1)
+if int((pd.version.short_version).split('.')[1]) >= 11:
+	pd.set_option('display.max_colwidth', -1)
+else:
+	pd.set_printoptions('display.max_colwidth', -1)
 
 '''
 ####################
