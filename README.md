@@ -9,7 +9,7 @@ This collection of scripts parse the PDR facebook page producing a kml file. Thi
 * Upload the file to my google maps
 
 # Requires
-pykml - pip install pykml
-libxml - sudo apt-get install python-lxml
-pandas
-numpy
+* pykml - pip install pykml
+* libxml - sudo apt-get install python-lxml
+* pandas
+* numpy
