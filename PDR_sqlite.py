@@ -532,6 +532,8 @@ if __name__ == "__main__":
     # August 1th in epoch 1438372800
     facebookurl = 'https://graph.facebook.com/1630748980524187/feed?fields=full_picture,message,from,id,link,created_time&date_format=U&access_token='+token+'&since='+str(latest_epoch)+'&limit=1000'
 
+#    facebookurl = 'https://graph.facebook.com/1630748980524187/feed?fields=full_picture,message,from,id,link,created_time&date_format=U&access_token='+token+'&since=1439644593&limit=100&until=1439649894'
+    
     print("Fetching data from Facebook after "+datetime.datetime.fromtimestamp(float(latest_epoch)).strftime('%Y-%m-%d %H:%M:%S'))
     
     if offline is True:
@@ -566,9 +568,9 @@ if __name__ == "__main__":
     # Create TMP Database
     cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
     con.commit()
-    
+
     for post in data['data']:
-        if ('full_picture' in post) and ('message' in post):
+        if ('message' in post) and ('full_picture' in post):
             entry = ParseFacebook(post)
 
             if entry is not None:
@@ -700,6 +702,92 @@ s+=stats.to_html(index=False,classes=["scoreboard"])
 with open("/tmp/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
 
+
+'''
+
+Print out a score table for each participant
+
+'''
+cur.execute("SELECT * FROM Participants")
+for par in cur.fetchall():
+    s=u'''<html>
+    <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="../table.css">
+    </head>
+     <body>
+    <h2 align="center">'''+par[1]+'''</h2>
+     <table align="center" class="user_stat">
+      <thead>
+        <tr width="75%">
+        <td>Navn</td>
+        <td>'''+par[1]+'''</td>
+        </tr>
+          <th>Points</th>
+          <td>'''+str(par[3])+'''</td>
+        </tr>
+          <th>FIP</th>
+          <td>'''+str(par[4])+'''</td>
+        </tr>
+      </thead>
+     </table>
+    </br>
+    </br>
+    </br>
+
+     <table align="center" class="user_list">
+     <caption>Registered</caption>
+      <thead>
+        <tr width="75%">
+          <th>Dato</th>
+          <th>Postnumre</th>
+        </tr>
+      </thead>
+      <tbody>
+          '''
+    # Loop over all beers for each participant
+    cur.execute("SELECT * FROM Beers WHERE Participant = '"+par[1]+"' ORDER BY Drank_on DESC")
+    for b in cur.fetchall():
+          s+='<tr><td>'+datetime.datetime.fromtimestamp(float(b[1])).strftime('%Y-%m-%d %H:%M:%S')+'</td>\n<td><a href="'+b[5]+'">'+str(b[3])+b[2]+'</a></td>\n</tr>'
+          
+    s+= u'''
+      </tbody>
+     </table>
+    </br>
+    </br>
+    </br>
+
+    '''
+
+    s += u'''
+     <table align="center" class="zip_list">
+     <caption>Først i følgende postnumre</caption>
+      <thead>
+        <tr width="75%">
+          <th>Postnumre</th>
+          <th>Antal besøg i postnumre</th>
+        </tr>
+      </thead>
+      <tbody>
+        '''
+    # Loop over all beers for each participant
+    cur.execute("SELECT name, zip, Visitors FROM Zips WHERE First_Name = '"+par[1]+"' ORDER BY zip DESC")
+    for b in cur.fetchall():
+          s+= u'<tr><td>'+str(b[1])+'</td>\n<td>'+str(b[2])+'</td>\n</tr>'
+#          print(b[0].encode('utf-8'))
+          
+    s+= u'''
+      </tbody>
+     </table>
+    </body>
+    </html>
+
+    '''
+
+    sn = (par[1].replace(' ','')).encode('ascii','ignore').replace('.','')
+    print(sn)
+    with open("/tmp/parti/"+sn+"_table.html", "w") as text_file:
+        text_file.write(s.encode('utf-8'))
 
 con.close()
 
