@@ -728,10 +728,10 @@ for par in cur.fetchall():
         <td>Navn</td>
         <td>'''+par[1]+'''</td>
         </tr>
-          <th>Points</th>
+          <td>Points</td>
           <td>'''+str(par[3])+'''</td>
         </tr>
-          <th>FIP</th>
+          <td>FIP</td>
           <td>'''+str(par[4])+'''</td>
         </tr>
       </thead>
@@ -740,8 +740,8 @@ for par in cur.fetchall():
     </br>
     </br>
 
+    <h2>Registered</h2>
      <table align="center" class="user_list">
-     <caption>Registered</caption>
       <thead>
         <tr width="75%">
           <th>Dato</th>
@@ -765,8 +765,8 @@ for par in cur.fetchall():
     '''
 
     s += u'''
+     <h2>Først i følgende postnumre</h2>
      <table align="center" class="zip_list">
-     <caption>Først i følgende postnumre</caption>
       <thead>
         <tr width="75%">
           <th>Postnumre</th>
