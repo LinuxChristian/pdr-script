@@ -456,6 +456,7 @@ def UpdatePoints(cur,e):
         # Register first person in zipcode
         print(name+" is first in Zip "+str(zipcode)+"!")
         cur.execute('UPDATE Participants SET First = (SELECT First FROM Participants WHERE Name == "'+name+'")+1  WHERE Name == "'+name+'"')
+        cur.execute('UPDATE Zips SET First_Name = "'+name+'" WHERE Zip == "'+str(zipcode)+'"')
 
     visitors+=1
     if (visitors == 1):
@@ -584,8 +585,15 @@ if __name__ == "__main__":
     ############################
     #      UPDATE TABLE        #
     ############################
-    cur.execute("INSERT INTO Beers SELECT * FROM tmp ORDER BY Drank_on ASC")
-
+    try:
+        cur.execute("INSERT INTO Beers SELECT * FROM tmp ORDER BY Drank_on ASC")
+    except Exception, e:
+        print("Failed to in insert new data!")
+        print(e)
+        cur.execute("DROP TABLE tmp")
+        con.commit()
+        exit()
+        
     # Give out points
     cur.execute("SELECT * FROM tmp ORDER BY Drank_on ASC")
     for reg in cur.fetchall():
@@ -648,10 +656,11 @@ rate=pd.DataFrame(cur.fetchall())
 rate.columns = ["Navn","FIP","Points"]
 stats=pd.merge(stats,rate,on="Navn")
 
-#stmp=stats.copy(deep=True)
+# Distribute the shirts
 yellow=stats["Navn"][0]
 green=(stats.sort("FIP",ascending=False))["Navn"].iloc[0]
 
+# Only one can have a jersy
 if (yellow == green):
     green=(stats.sort("FIP",ascending=False))["Navn"].iloc[1]
 
