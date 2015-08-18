@@ -27,6 +27,9 @@ from matplotlib import cm
 import pandas as pd
 from collections import OrderedDict
 
+# Turn off pandas column width limitor
+pd.set_option('display.max_colwidth', -1)
+
 '''
 ####################
 #                  #
@@ -696,7 +699,9 @@ s=u'''<link rel="stylesheet" type="text/css" href="table.css">
  </table>
 </br>
 '''
-s+=stats.to_html(index=False,classes=["scoreboard"])
+
+stats['Navn'] = stats['Navn'].apply(lambda x: '<a href="parti/%s_table.html">%s</a>' % ((x.replace(' ','')).encode('ascii','ignore').replace('.',''),x))
+s+=stats.to_html(index=False,classes=["scoreboard"],escape=False)
 
 
 with open("/tmp/table.html", "w") as text_file:
