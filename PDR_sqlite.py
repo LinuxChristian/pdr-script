@@ -336,8 +336,10 @@ def ParseFacebook(post):
     lat=None
     lon=None
     image=None
+    link=None
     date=None
     town=None
+    beer=None
     
     date = int(post["created_time"])
     name = post["from"]["name"]
@@ -350,7 +352,11 @@ def ParseFacebook(post):
         
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
-    
+
+    beeridx = msg.index('Øl:')
+    if beeridx > 0:
+        beer=msg[beeridx:-1]
+        
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
     
@@ -373,7 +379,7 @@ def ParseFacebook(post):
             # Get town
             town = z[0]
 
-        return [name,date,zipcode,town,lat,lon,image]
+        return [name,date,zipcode,town,lat,lon,image,beer,link]
     else:
         print("Invalid post!")
         print(msg)
