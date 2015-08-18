@@ -353,9 +353,9 @@ def ParseFacebook(post):
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
 
-    beeridx = msg.index('Øl:')
-    if beeridx > 0:
-        beer=msg[beeridx:-1]
+    if u'Øl:' in msg:
+        beeridx = msg.lower().find(u'Øl:')
+        beer=msg[beeridx+2:-1]
 
     link=post['link']
     image=post['full_picture']
@@ -426,7 +426,7 @@ def UpdateBeerDatabase(cur,
     print("")
     
     # Update drinking information
-    cur.execute('''INSERT OR REPLACE INTO tmp(Participant, Drank_on, City, Zipcode,Image,Link) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image,link))
+    cur.execute('''INSERT OR REPLACE INTO tmp(Participant, Drank_on, City, Zipcode,Image,Link) VALUES(?,?,?,?,?,?)''',(name,date,city,zipcode,image,link))
 
     # Update with GPS
     if lat is not None and lon is not None:
@@ -637,15 +637,15 @@ stats.columns = ["Navn","Postnumre","Dækning antal (%)","DPP*"]
 
 
 # Compute area visited
-cur.execute("SELECT sum(Zips.area) FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
+cur.execute("SELECT sum(Zips.area)/14953469.18 FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
 area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
 
 # Fetch beers the last 7 days - Old Green Jersy
 #cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= datetime('now','-7 days') GROUP BY Participant")
 
-cur.execute("SELECT Participant, count(*) FROM (SELECT * FROM Beers GROUP BY Zipcode ORDER BY Drank_on) GROUP BY Participant")
+cur.execute("SELECT Name, First, Points FROM Participants")
 rate=pd.DataFrame(cur.fetchall())
-rate.columns = ["Navn","FIP"]
+rate.columns = ["Navn","FIP","Points"]
 stats=pd.merge(stats,rate,on="Navn")
 
 #stmp=stats.copy(deep=True)
@@ -659,7 +659,7 @@ polka=(stats.sort("Area",ascending=False))["Navn"].iloc[0]
 if (yellow == polka):
     polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]
 
-stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","FIP"]
+stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","FIP","Points"]
 
 s=u'''<link rel="stylesheet" type="text/css" href="table.css">
  <table align="center" class="jersy">
