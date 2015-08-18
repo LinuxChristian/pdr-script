@@ -356,7 +356,10 @@ def ParseFacebook(post):
     beeridx = msg.index('Øl:')
     if beeridx > 0:
         beer=msg[beeridx:-1]
-        
+
+    link=post['link']
+    image=post['full_picture']
+    
     # Get zipcode
     szipcode = [s for s in msg[0].split(" ") if (s.isdigit() and len(s)==4)]
     
@@ -409,12 +412,13 @@ def UpdateBeerDatabase(cur,
                        e):
     name=e[0]#.decode('unicode-escape') # Participant name
     date=e[1] # Beer drank on date
-    city=e[3]
     zipcode=e[2]
+    city=e[3]
+    lon = e[4] # Longitude
+    lat = e[5] # Latitude
     image=e[6] # Link to image
-    lat = e[4] # Latitude
-    lon = e[3] # Longitude
-    beer = None # Name of beer
+    beer = e[7] # Name of beer
+    link = e[8] # Link to facebook
 
     print("Updating User "+name)
     print("With zipcode "+str(zipcode)+" and town "+city)
@@ -422,7 +426,7 @@ def UpdateBeerDatabase(cur,
     print("")
     
     # Update drinking information
-    cur.execute('''INSERT OR REPLACE INTO tmp(Participant, Drank_on, City, Zipcode,Image) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image))
+    cur.execute('''INSERT OR REPLACE INTO tmp(Participant, Drank_on, City, Zipcode,Image,Link) VALUES(?,?,?,?,?)''',(name,date,city,zipcode,image,link))
 
     # Update with GPS
     if lat is not None and lon is not None:
@@ -432,7 +436,6 @@ def UpdateBeerDatabase(cur,
     if beer is not None:
         cur.execute('''INSERT INTO tmp(Beer) VALUES(?) WHERE Participant == "'''+name+'''" and Zipcode == "'''+zipcode+'''"''',(beer))
 
-    # Update visitor database
     
 def UpdateUserDatabase(cur,userdb):
     cur.execute('''INSERT OR IGNORE INTO Participants(name) VALUES(?)''',(userdb,))
