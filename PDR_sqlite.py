@@ -28,10 +28,10 @@ import pandas as pd
 from collections import OrderedDict
 
 # Turn off pandas column width limitor
-if int((pd.version.short_version).split('.')[1]) >= 11:
-	pd.set_option('display.max_colwidth', -1)
-else:
-	pd.set_printoptions('display.max_colwidth', -1)
+#if int((pd.version.short_version).split('.')[1]) >= 11:
+pd.set_option('display.max_colwidth', -1)
+#else:
+#	pd.set_printoptions('display.max_colwidth', -1)
 
 '''
 ####################
@@ -255,7 +255,7 @@ def WriteMap(plist):
 
     s+=WriteMapFooter(plist)
 
-    with open('/tmp/maps/index.html','w') as f:
+    with open('/home/debian/PDR-data/maps/index.html','w') as f:
         f.write(s.encode('utf-8'))
 
 '''
@@ -427,7 +427,7 @@ def UpdateBeerDatabase(cur,
     link = e[8] # Link to facebook
 
     print("Updating User "+name)
-    print("With zipcode "+str(zipcode)+" and town "+city)
+    print("With zipcode "+str(zipcode)+" and town "+city.encode('utf-8'))
     print("Drank on "+str(date))
     print("")
     
@@ -636,7 +636,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/tmp/maps/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/home/debian/PDR-data/maps/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
     WriteMap(participants)
@@ -707,7 +707,7 @@ stats['Navn'] = stats['Navn'].apply(lambda x: '<a href="parti/%s_table.html">%s<
 s+=stats.to_html(index=False,classes=["scoreboard"],escape=False)
 
 
-with open("/tmp/table.html", "w") as text_file:
+with open("/home/debian/PDR-data/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
 
 
@@ -794,7 +794,7 @@ for par in cur.fetchall():
 
     sn = (par[1].replace(' ','')).encode('ascii','ignore').replace('.','')
     print(sn)
-    with open("/tmp/parti/"+sn+"_table.html", "w") as text_file:
+    with open("/home/debian/PDR-data/parti/"+sn+"_table.html", "w") as text_file:
         text_file.write(s.encode('utf-8'))
 
 con.close()
