@@ -33,6 +33,7 @@ pd.set_option('display.max_colwidth', -1)
 #else:
 #	pd.set_printoptions('display.max_colwidth', -1)
 
+
 '''
 ####################
 #                  #
@@ -198,8 +199,6 @@ def WriteMapFooter(parti):
     });
     layerOrder[layerOrder.length] = exp_JyllandJSON;
 
-    }
-
     '''
     
     s += '''
@@ -255,7 +254,7 @@ def WriteMap(plist):
 
     s+=WriteMapFooter(plist)
 
-    with open('/home/debian/PDR-data/maps/index.html','w') as f:
+    with open('/home/debian/davfs/maps/latest/index.html','w') as f:
         f.write(s.encode('utf-8'))
 
 '''
@@ -636,7 +635,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/home/debian/PDR-data/maps/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
     WriteMap(participants)
@@ -678,6 +677,8 @@ if (yellow == polka):
 
 stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","FIP","Points"]
 
+print(polka.encode('utf-8'))
+# '''+datetime.datetime.now().strftime("%Y-%m-%d %H:%M").encode('utf-8')+''
 s=u'''<link rel="stylesheet" type="text/css" href="table.css">
  <table align="center" class="jersy">
   <thead>
@@ -701,13 +702,14 @@ s=u'''<link rel="stylesheet" type="text/css" href="table.css">
   </tbody>
  </table>
 </br>
+</br> <h3 align="center">Sidste opdatering: '''+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S').decode('unicode-escape')+'''</h3> </br>
 '''
 
-stats['Navn'] = stats['Navn'].apply(lambda x: '<a href="parti/%s_table.html">%s</a>' % ((x.replace(' ','')).encode('ascii','ignore').replace('.',''),x))
+stats['Navn'] = stats['Navn'].apply(lambda x: '<a target="_parent" href="parti/%s_table.html">%s</a>' % ((x.replace(' ','')).encode('ascii','ignore').replace('.',''),x))
 s+=stats.to_html(index=False,classes=["scoreboard"],escape=False)
 
 
-with open("/home/debian/PDR-data/table.html", "w") as text_file:
+with open("/home/debian/davfs/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
 
 
@@ -756,7 +758,7 @@ for par in cur.fetchall():
     # Loop over all beers for each participant
     cur.execute("SELECT * FROM Beers WHERE Participant = '"+par[1]+"' ORDER BY Drank_on DESC")
     for b in cur.fetchall():
-          s+='<tr><td>'+datetime.datetime.fromtimestamp(float(b[1])).strftime('%Y-%m-%d %H:%M:%S')+'</td>\n<td><a href="'+b[5]+'">'+str(b[3])+b[2]+'</a></td>\n</tr>'
+          s+='<tr><td>'+datetime.datetime.fromtimestamp(float(b[1])).strftime('%Y-%m-%d %H:%M:%S')+'</td>\n<td><a href="'+b[5]+'">'+str(b[3])+", "+b[2]+'</a></td>\n</tr>'
           
     s+= u'''
       </tbody>
@@ -794,7 +796,7 @@ for par in cur.fetchall():
 
     sn = (par[1].replace(' ','')).encode('ascii','ignore').replace('.','')
     print(sn)
-    with open("/home/debian/PDR-data/parti/"+sn+"_table.html", "w") as text_file:
+    with open("/home/debian/davfs/parti/"+sn+"_table.html", "w") as text_file:
         text_file.write(s.encode('utf-8'))
 
 con.close()
