@@ -571,9 +571,8 @@ if __name__ == "__main__":
     #  INSERT INTO TMP TABLE   #
     ############################
     # Create TMP Database
-    if len(data['data']) > 0:
-	cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
-	con.commit()
+    cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
+    con.commit()
 
     for post in data['data']:
         if ('message' in post) and ('full_picture' in post):
@@ -598,8 +597,7 @@ if __name__ == "__main__":
     except Exception, e:
         print("Failed to in insert new data!")
         print(e)
-	if len(data['data']) > 0:
-       	    cur.execute("DROP TABLE tmp")
+       	cur.execute("DROP TABLE tmp")
         con.commit()
         exit()
         
@@ -607,6 +605,7 @@ if __name__ == "__main__":
     cur.execute("SELECT * FROM tmp ORDER BY Drank_on ASC")
     for reg in cur.fetchall():
         UpdatePoints(cur,reg)
+
     
     cur.execute("DROP TABLE tmp")
     con.commit()
