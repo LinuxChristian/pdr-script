@@ -425,7 +425,7 @@ def UpdateBeerDatabase(cur,
     beer = e[7] # Name of beer
     link = e[8] # Link to facebook
 
-    print("Updating User "+name)
+    print("Updating User "+name.encode('utf-8'))
     print("With zipcode "+str(zipcode)+" and town "+city.encode('utf-8'))
     print("Drank on "+str(date))
     print("")
@@ -459,7 +459,7 @@ def UpdatePoints(cur,e):
     points=0
     if visitors == 0:            
         # Register first person in zipcode
-        print(name+" is first in Zip "+str(zipcode)+"!")
+        print(name.encode('utf-8')+" is first in Zip "+str(zipcode)+"!")
         cur.execute('UPDATE Participants SET First = (SELECT First FROM Participants WHERE Name == "'+name+'")+1  WHERE Name == "'+name+'"')
         cur.execute('UPDATE Zips SET First_Name = "'+name+'" WHERE Zip == "'+str(zipcode)+'"')
 
@@ -571,8 +571,9 @@ if __name__ == "__main__":
     #  INSERT INTO TMP TABLE   #
     ############################
     # Create TMP Database
-    cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
-    con.commit()
+    if len(data['data']) > 0:
+	cur.execute("CREATE TABLE tmp(Participant TEXT, Drank_on INT, City TEXT, Zipcode INT, Image TEXT, Link TEXT, Lat FLOAT, Lon FLOAT, Beer TEXT, CONSTRAINT unq UNIQUE (Participant, zipcode))")
+	con.commit()
 
     for post in data['data']:
         if ('message' in post) and ('full_picture' in post):
@@ -597,7 +598,8 @@ if __name__ == "__main__":
     except Exception, e:
         print("Failed to in insert new data!")
         print(e)
-        cur.execute("DROP TABLE tmp")
+	if len(data['data']) > 0:
+       	    cur.execute("DROP TABLE tmp")
         con.commit()
         exit()
         
@@ -614,7 +616,11 @@ if __name__ == "__main__":
     ############################
     # Get data for zipcode
     cur.execute('SELECT * FROM Participants;')
-    participants = cur.fetchall()
+    if len(data['data']) > 0:
+	participants = cur.fetchall()
+    else:
+	participants = []
+
     for p in participants:
         cur.execute('SELECT * FROM Beers WHERE Participant = "'+p[1]+'";')
         s = WriteHeader(p[1].encode('ascii','ignore'));
