@@ -148,12 +148,13 @@ def WriteMapParti(p,i):
     style: doStyle'''+shortname+'''
     });
     layerOrder[layerOrder.length] = exp_'''+shortname+'''JSON;
-    for (index = 0; index < layerOrder.length; index++) {
-    feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
-    }
-    //add comment sign to hide this layer on the map in the initial view.
-    feature_group.addLayer(exp_'''+shortname+'''JSON);
         '''
+
+#    for (index = 0; index < layerOrder.length; index++) {
+#    feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
+#   }
+#    //add comment sign to hide this layer on the map in the initial view.
+#    feature_group.addLayer(exp_'''+shortname+'''JSON);
     return s;
 
 '''
@@ -210,7 +211,7 @@ def WriteMapFooter(parti):
     return this._div;
     };
     title.update = function () {
-    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: '''+datetime.date.today().strftime("%d %b %Y")+''' '
+    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: '''+datetime.date.today().strftime("%d %b %Y - %H:%m")+''' '
     };
     title.addTo(map);
     var baseMaps = {
@@ -615,7 +616,7 @@ if __name__ == "__main__":
     ############################
     # Get data for zipcode
     cur.execute('SELECT * FROM Participants;')
-    if len(data['data']) > 0:
+    if len(data['data']) > 0 or True:
 	participants = cur.fetchall()
     else:
 	participants = []
