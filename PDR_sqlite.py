@@ -673,6 +673,8 @@ rate=pd.DataFrame(cur.fetchall())
 rate.columns = ["Navn","FIP","Points"]
 stats=pd.merge(stats,rate,on="Navn")
 
+stats.columns = ["Navn","Postnumre","Area","Dækning antal (%)","DPP","Sidste 7 dage","FIP","Points"]
+
 # Distribute the shirts
 yellow=stats["Navn"][0]
 
@@ -689,9 +691,41 @@ if (yellow == polka):
     else:
         polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]+" <br>("+yellow+")"
 
-stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","7 dage","FIP","Points"]
+# Giveout red shirt and fix duplets
+red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[0]
+redlead=None
+loc=0
 
-print(polka.encode('utf-8'))
+if (yellow == red):
+    loc+=1
+    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
+    redlead=yellow
+
+if (green == red):
+    loc+=1
+    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
+    if redlead is None:
+	redlead=green
+
+
+if (polka == red):
+    loc+=1
+    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
+    if redlead is None:
+	redlead=polka
+
+if redlead is None:
+    red = red
+else:
+    red = red+" <br>("+redlead+")"
+
+print('Yellow: '+yellow.encode('utf-8'))
+print('Green: '+green.encode('utf-8'))
+print('Polkadot: '+polka.encode('utf-8'))
+print('Red: '+red.encode('utf-8')+'\n\n')
+
+stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","Sidste 7 dage","FIP","Points"]
+
 # '''+datetime.datetime.now().strftime("%Y-%m-%d %H:%M").encode('utf-8')+''
 s=u'''<link rel="stylesheet" type="text/css" href="table.css">
  <table align="center" class="jersy">
@@ -700,6 +734,7 @@ s=u'''<link rel="stylesheet" type="text/css" href="table.css">
       <th>Føre</th>
       <th>Sprinter</th>
       <th>Areal</th>
+      <th>7 Dages Sprinter</th>
     </tr>
   </thead>
   <tbody>
@@ -707,11 +742,13 @@ s=u'''<link rel="stylesheet" type="text/css" href="table.css">
       <td><img width="150px" height="120px" src="yellow.png"></img></td>
       <td><img width="150px" height="120px" src="green.png"></img></td>
       <td><img width="150px" height="120px" src="polkadot.png"></img></td>
+      <td><img width="150px" height="120px" src="red.png"></img></td>
     </tr>
     <tr>
       <td>'''+yellow+'''</td>
       <td>'''+green+'''</td>
       <td>'''+polka+'''</td>
+      <td>'''+red+'''</td>
     </tr>
   </tbody>
  </table>
