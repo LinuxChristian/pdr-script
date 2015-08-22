@@ -358,7 +358,7 @@ def ParseFacebook(post):
     # Split message on newline
     msg = post["message"].encode('utf-8').split('\n')
 
-    if u'Øl:' in msg:
+    if u'Øl:'.encode('utf-8') in msg:
         beeridx = msg.lower().find(u'Øl:')
         beer=msg[beeridx+2:-1]
 
@@ -675,15 +675,19 @@ stats=pd.merge(stats,rate,on="Navn")
 
 # Distribute the shirts
 yellow=stats["Navn"][0]
-green=(stats.sort("FIP",ascending=False))["Navn"].iloc[0]
 
+green=(stats.sort("FIP",ascending=False))["Navn"].iloc[0]
 # Only one can have a jersy
 if (yellow == green):
-    green=(stats.sort("FIP",ascending=False))["Navn"].iloc[1]
+    green=(stats.sort("FIP",ascending=False))["Navn"].iloc[1]+" <br>("+yellow+")"
 
 polka=(stats.sort("Area",ascending=False))["Navn"].iloc[0]
 if (yellow == polka):
     polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]
+    if (green == polka):
+        polka=(stats.sort("Area",ascending=False))["Navn"].iloc[2]+" <br>("+yellow+")"
+    else:
+        polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]+" <br>("+yellow+")"
 
 stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","7 dage","FIP","Points"]
 
