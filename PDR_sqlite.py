@@ -616,7 +616,7 @@ if __name__ == "__main__":
     ############################
     # Get data for zipcode
     cur.execute('SELECT * FROM Participants;')
-    if len(data['data']) > 0 or True:
+    if len(data['data']) > 0:
 	participants = cur.fetchall()
     else:
 	participants = []
