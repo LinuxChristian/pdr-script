@@ -667,12 +667,12 @@ cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= "+day7_epoc
 rate=pd.DataFrame(cur.fetchall())
 print(rate)
 rate.columns = ["Navn","Sidste 7 Dage"]
-stats=pd.merge(stats,rate,on="Navn")
+stats=pd.merge(stats,rate,on="Navn",how="outer")
 
 cur.execute("SELECT Name, First, Points FROM Participants")
 rate=pd.DataFrame(cur.fetchall())
 rate.columns = ["Navn","FIP","Points"]
-stats=pd.merge(stats,rate,on="Navn")
+stats=pd.merge(stats,rate,on="Navn",how="outer")
 
 stats.columns = ["Navn","Postnumre","Area","Dækning antal (%)","DPP","Sidste 7 dage","FIP","Points"]
 
