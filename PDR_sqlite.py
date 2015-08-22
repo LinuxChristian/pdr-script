@@ -650,14 +650,14 @@ if __name__ == "__main__":
 '''
 
 # Compute participant stats
-cur.execute("SELECT Participant,count(),count()/593.0,(julianday('2020-08-01')-julianday('now'))/(593.0-count()) FROM Beers GROUP BY Participant ORDER BY count() DESC")
+cur.execute("SELECT Participant,count(),100*count()/593.0,(julianday('2020-08-01')-julianday('now'))/(593.0-count()) FROM Beers GROUP BY Participant ORDER BY count() DESC")
 
 stats = pd.DataFrame(cur.fetchall())
 stats.columns = ["Navn","Postnumre","Dækning antal (%)","DPP*"]
 
 
 # Compute area visited
-cur.execute("SELECT sum(Zips.area)/14953469.18 FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
+cur.execute("SELECT 100*sum(Zips.area)/14953469.18 FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
 area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
 
 # Fetch beers the last 7 days - Old Green Jersy
