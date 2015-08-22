@@ -661,7 +661,12 @@ cur.execute("SELECT 100*sum(Zips.area)/14953469.18 FROM Beers INNER JOIN Zips ON
 area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
 
 # Fetch beers the last 7 days - Old Green Jersy
-#cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= datetime('now','-7 days') GROUP BY Participant")
+day7_epoch = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%s')
+cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= "+day7_epoch+" GROUP BY Participant")
+rate=pd.DataFrame(cur.fetchall())
+print(rate)
+rate.columns = ["Navn","Sidste 7 Dage"]
+stats=pd.merge(stats,rate,on="Navn")
 
 cur.execute("SELECT Name, First, Points FROM Participants")
 rate=pd.DataFrame(cur.fetchall())
@@ -680,7 +685,7 @@ polka=(stats.sort("Area",ascending=False))["Navn"].iloc[0]
 if (yellow == polka):
     polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]
 
-stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","FIP","Points"]
+stats.columns = ["Navn","Postnumre","Dækning Areal (%)","Dækning antal (%)","DPP","7 dage","FIP","Points"]
 
 print(polka.encode('utf-8'))
 # '''+datetime.datetime.now().strftime("%Y-%m-%d %H:%M").encode('utf-8')+''
