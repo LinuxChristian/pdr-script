@@ -593,7 +593,7 @@ if __name__ == "__main__":
     #      UPDATE TABLE        #
     ############################
     try:
-        cur.execute("INSERT INTO Beers SELECT * FROM tmp ORDER BY Drank_on ASC")
+        cur.execute("INSERT OR REPLACE INTO Beers SELECT * FROM tmp ORDER BY Drank_on ASC")
     except Exception, e:
         print("Failed to in insert new data!")
         print(e)
