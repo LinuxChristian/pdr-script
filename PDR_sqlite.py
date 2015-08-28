@@ -608,14 +608,11 @@ if __name__ == "__main__":
         UpdatePoints(cur,reg)
 
     
-    cur.execute("DROP TABLE tmp")
-    con.commit()
-
     ############################
     #      WRITE MAP DATA      #
     ############################
     # Get data for zipcode
-    cur.execute('SELECT * FROM Participants;')
+    cur.execute('SELECT * FROM tmp;')
     if len(data['data']) > 0:
 	participants = cur.fetchall()
     else:
@@ -644,7 +641,12 @@ if __name__ == "__main__":
         with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
+    cur.execute('SELECT * FROM Participants;')
+    participants = cur.fetchall()
     WriteMap(participants)
+
+cur.execute("DROP TABLE tmp")
+con.commit()
 
 '''
  COMPUTE STATISTICS
