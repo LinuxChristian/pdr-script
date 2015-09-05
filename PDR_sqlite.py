@@ -289,7 +289,7 @@ def WritePolygon(data,place):
         s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]
         s += '''","Postnummer":"'''+str(data[3])
         s += '''","By":"'''+data[2]
-        s += '''","Dato":"'''+str(data[1])+'''"}, "geometry":{"type":'''
+        s += '''","Dato":"'''+datetime.datetime.fromtimestamp(float(data[1])).strftime('%Y-%m-%d %H:%M:%S')+'''"}, "geometry":{"type":'''
         
         # Parse polygons
         if hasattr(place,"MultiGeometry"):
