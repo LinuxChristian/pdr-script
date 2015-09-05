@@ -678,49 +678,39 @@ stats=pd.merge(stats,rate,on="Navn",how="outer")
 
 stats.columns = ["Navn","Postnumre","Area","Dækning antal (%)","DPP","Sidste 7 dage","FIP","Points"]
 
-# Distribute the shirts
-yellow=stats["Navn"][0]
+# Make a copy of stats to remove rows in
+stats_tmp = stats.copy(deep=True)
 
-green=(stats.sort("FIP",ascending=False))["Navn"].iloc[0]
-# Only one can have a jersy
-if (yellow == green):
-    green=(stats.sort("FIP",ascending=False))["Navn"].iloc[1]+" <br>("+yellow+")"
+# Distribute the yellow jersy and remove the player
+yellow=(stats_tmp.sort(["Postnumre","Points"],ascending=False))["Navn"].iloc[0]
+stats_tmp = stats_tmp[stats_tmp["Navn"] != yellow]
 
-polka=(stats.sort("Area",ascending=False))["Navn"].iloc[0]
-if (yellow == polka):
-    polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]
-    if (green == polka):
-        polka=(stats.sort("Area",ascending=False))["Navn"].iloc[2]+" <br>("+yellow+")"
-    else:
-        polka=(stats.sort("Area",ascending=False))["Navn"].iloc[1]+" <br>("+yellow+")"
+# Distribute the green jersy and remove the player
+green=(stats_tmp.sort(["FIP","Points"],ascending=False))["Navn"].iloc[0]
+stats_tmp = stats_tmp[stats_tmp["Navn"] != green]
+
+# Check if the jersy is only a loan
+green_true=(stats.sort(["FIP","Points"],ascending=False))["Navn"].iloc[0]
+if (green != green_true):
+    green=green+" <br>("+green_true+")"
+
+# Distribute the polka jersy and remove the player
+polka=(stats.sort(["Area","Points"],ascending=False))["Navn"].iloc[0]
+stats_tmp = stats_tmp[stats_tmp["Navn"] != polka]
+
+# Check if the jersy is only a loan
+polka_true=(stats.sort(["Area","Points"],ascending=False))["Navn"].iloc[0]
+if (polka != polka_true):
+    polka=polka+" <br>("+polka_true+")"
 
 # Giveout red shirt and fix duplets
-red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[0]
-redlead=None
-loc=0
+red=(stats_tmp.sort(["Sidste 7 dage","Points"],ascending=False))["Navn"].iloc[0]
+stats_tmp = stats_tmp[stats_tmp["Navn"] != red]
 
-if (yellow == red):
-    loc+=1
-    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
-    redlead=yellow
-
-if (green == red):
-    loc+=1
-    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
-    if redlead is None:
-	redlead=green
-
-
-if (polka == red):
-    loc+=1
-    red=(stats.sort("Sidste 7 dage",ascending=False))["Navn"].iloc[loc]
-    if redlead is None:
-	redlead=polka
-
-if redlead is None:
-    red = red
-else:
-    red = red+" <br>("+redlead+")"
+# Check if the jersy is only a loan
+red_true=(stats.sort(["Sidste 7 dage","Points"],ascending=False))["Navn"].iloc[0]
+if (red != red_true):
+    red=red+" <br>("+red_true+")"
 
 print('Yellow: '+yellow.encode('utf-8'))
 print('Green: '+green.encode('utf-8'))
