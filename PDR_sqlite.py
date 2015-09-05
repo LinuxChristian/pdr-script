@@ -619,8 +619,8 @@ if __name__ == "__main__":
 	participants = []
 
     for p in participants:
-        cur.execute('SELECT * FROM Beers WHERE Participant = "'+p[1]+'";')
-        s = WriteHeader(p[1].encode('ascii','ignore'));
+        cur.execute('SELECT * FROM Beers WHERE Participant = "'+p[0]+'";')
+        s = WriteHeader(p[0].encode('ascii','ignore'));
 
         beers = cur.fetchall()
         for i,b in enumerate(beers):
@@ -638,7 +638,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
     cur.execute('SELECT * FROM Participants;')
