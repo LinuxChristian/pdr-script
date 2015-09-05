@@ -488,11 +488,6 @@ def UpdatePoints(cur,e):
     # Update visited counter
     cur.execute('UPDATE Zips SET Visitors = '+str(visitors)+' WHERE Zip == "'+str(zipcode)+'"')
 
-
-
-
-
-
     
 '''
 Main function
@@ -641,8 +636,34 @@ if __name__ == "__main__":
         with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
+    # Write a combined user
+    cur.execute('SELECT * FROM Beers GROUP BY Zipcode ORDER BY Drank_on DESC;')
+    beers = cur.fetchall()
+    s = WriteHeader('AlleDeltagere');
+
+    for i,b in enumerate(beers):
+        try:
+            place = PM[PMN.index(str(b[3]))]    
+        except e:    
+            print "Error %s:" % e.args[0]
+            sys.exit(1)
+
+        s=s+WritePolygon(b,place)
+
+        if i < len(beers)-1:
+            s += ',\n'
+
+
+    s += WriteFooter()
+
+    with open('/home/debian/davfs/maps/latest/latest/exp_AlleDeltagere.js','w') as f:
+        f.write(s.encode('utf-8'))
+
+    # Write participants to map
     cur.execute('SELECT * FROM Participants;')
     participants = cur.fetchall()
+    participants.append((None,u'Alle Deltagere',None,None,None))
+    print(participants)
     WriteMap(participants)
 
 cur.execute("DROP TABLE tmp")
