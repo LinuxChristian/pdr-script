@@ -695,7 +695,7 @@ if (green != green_true):
     green=green+" <br>("+green_true+")"
 
 # Distribute the polka jersy and remove the player
-polka=(stats.sort(["Area","Points"],ascending=False))["Navn"].iloc[0]
+polka=(stats_tmp.sort(["Area","Points"],ascending=False))["Navn"].iloc[0]
 stats_tmp = stats_tmp[stats_tmp["Navn"] != polka]
 
 # Check if the jersy is only a loan
