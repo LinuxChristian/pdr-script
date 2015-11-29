@@ -217,9 +217,7 @@ def WriteMapFooter(parti):
     var baseMaps = {
     'Thunderforest Outdoors': basemap_0
     };
-    L.control.layers(baseMaps,{"Sjaelland": exp_SjaellandJSON,
-    "Fyn": exp_FynJSON,
-    "Jylland": exp_JyllandJSON,
+    L.control.layers(baseMaps,{
     '''
 
     for i,p in enumerate(parti):
@@ -228,7 +226,9 @@ def WriteMapFooter(parti):
         if i < len(parti)-1:
             s+=','
             
-    s+='''},{collapsed:true}).addTo(map);
+    s+=''',"Sjaelland": exp_SjaellandJSON,
+    "Fyn": exp_FynJSON,
+    "Jylland": exp_JyllandJSON},{collapsed:true}).addTo(map);
     function updateOpacity(value) {
     }
     L.control.scale({options: {position: 'bottomleft',maxWidth: 100,metric: true,imperial: false,updateWhenIdle: false}}).addTo(map);
@@ -384,6 +384,7 @@ def ParseFacebook(post):
             
         if (z is None):
             print("Invalid zipcode!");
+	    print("Zip string: {}".format(szipcode));
         else:
             # Get town
             town = z[0]
@@ -427,7 +428,7 @@ def UpdateBeerDatabase(cur,
     link = e[8] # Link to facebook
 
     print("Updating User "+name.encode('utf-8'))
-    print("With zipcode "+str(zipcode)+" and town "+city.encode('utf-8'))
+    print("With zipcode "+str(zipcode).encode('utf-8')+" and town "+city.encode('utf-8'))
     print("Drank on "+str(date))
     print("")
     
@@ -608,7 +609,7 @@ if __name__ == "__main__":
     ############################
     # Get data for zipcode
     cur.execute('SELECT * FROM tmp;')
-    if len(data['data']) > 0:
+    if len(data['data']) > 0 or True:
 	participants = cur.fetchall()
     else:
 	participants = []
@@ -660,7 +661,7 @@ if __name__ == "__main__":
         f.write(s.encode('utf-8'))
 
     # Write participants to map
-    cur.execute('SELECT * FROM Participants;')
+    cur.execute('SELECT * FROM Participants ORDER BY Points DESC;')
     participants = cur.fetchall()
     participants.append((None,u'Alle Deltagere',None,None,None))
     print(participants)
