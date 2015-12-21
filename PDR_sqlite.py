@@ -255,7 +255,7 @@ def WriteMap(plist):
 
     s+=WriteMapFooter(plist)
 
-    with open('/home/debian/davfs/maps/latest/index.html','w') as f:
+    with open('/home/pi/davfs/maps/latest/index.html','w') as f:
         f.write(s.encode('utf-8'))
 
 '''
@@ -634,7 +634,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/home/debian/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/home/pi/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
     # Write a combined user
@@ -657,7 +657,7 @@ if __name__ == "__main__":
 
     s += WriteFooter()
 
-    with open('/home/debian/davfs/maps/latest/latest/exp_AlleDeltagere.js','w') as f:
+    with open('/home/pi/davfs/maps/latest/latest/exp_AlleDeltagere.js','w') as f:
         f.write(s.encode('utf-8'))
 
     # Write participants to map
@@ -775,7 +775,7 @@ stats['Navn'] = stats['Navn'].apply(lambda x: '<a target="_parent" href="parti/%
 s+=stats.to_html(index=False,classes=["scoreboard"],escape=False)
 
 
-with open("/home/debian/davfs/table.html", "w") as text_file:
+with open("/home/pi/davfs/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
 
 
@@ -862,7 +862,7 @@ for par in cur.fetchall():
 
     sn = (par[1].replace(' ','')).encode('ascii','ignore').replace('.','')
     print(sn)
-    with open("/home/debian/davfs/parti/"+sn+"_table.html", "w") as text_file:
+    with open("/home/pi/davfs/parti/"+sn+"_table.html", "w") as text_file:
         text_file.write(s.encode('utf-8'))
 
 con.close()
