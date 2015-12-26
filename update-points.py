@@ -53,7 +53,7 @@ def UpdatePoints(cur,name,date,city,zipcode):
     cur.execute('UPDATE Zips SET Visitors = (Visitors + 1) WHERE Zip == "'+str(zipcode)+'"')
 
     cur.execute('SELECT Visitors FROM Zips WHERE Zip == "'+str(zipcode)+'"')
-    print(name+" was number "+str(visitors)+" in "+city)
+    print(name.encode('utf-8')+" was number "+str(visitors)+" in "+city.encode('utf-8'))
     
 if __name__ == "__main__":
 
