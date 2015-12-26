@@ -7733,21 +7733,15 @@
 			<styleUrl>#poly-000000-0-0</styleUrl>
 			<ExtendedData>
 			</ExtendedData>
+			<MultiGeometry>
 			<Polygon>
-				<outerBoundaryIs>
+			  <outerBoundaryIs>
 					<LinearRing>
 						<tessellate>1</tessellate>
 						<coordinates>10.24867,56.28773100000001,0.0 10.263637,56.288565000000006,0.0 10.27479,56.312522,0.0 10.265815,56.312583,0.0 10.262047000000003,56.30486200000001,0.0 10.259515000000002,56.307437,0.0 10.256723,56.303738,0.0 10.240084,56.302633,0.0 10.235495,56.289086,0.0 10.242657,56.287997,0.0 10.247216999999997,56.295087,0.0 10.251892,56.294297,0.0 10.24867,56.28773100000001,0.0</coordinates>
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
-		</Placemark>
-		<Placemark>
-			<name>8541</name>
-			<description><![CDATA[Attributes<br>  DISTNAME  Skødstrup]]></description>
-			<styleUrl>#poly-000000-0-0</styleUrl>
-			<ExtendedData>
-			</ExtendedData>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -7756,6 +7750,7 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
+		</MultiGeometry>
 		</Placemark>
 		<Placemark>
 			<name>8543</name>
