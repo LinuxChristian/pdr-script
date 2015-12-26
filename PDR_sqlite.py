@@ -597,11 +597,12 @@ if __name__ == "__main__":
        	cur.execute("DROP TABLE tmp")
         con.commit()
         exit()
-        
+
+    # THIS IS NOW HANDLED BY THE EXTERNAL SCRIPT
     # Give out points
-    cur.execute("SELECT * FROM tmp ORDER BY Drank_on ASC")
-    for reg in cur.fetchall():
-        UpdatePoints(cur,reg)
+#    cur.execute("SELECT * FROM tmp ORDER BY Drank_on ASC")
+#    for reg in cur.fetchall():
+#        UpdatePoints(cur,reg)
 
     
     ############################
