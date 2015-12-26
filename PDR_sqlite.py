@@ -682,7 +682,7 @@ stats.columns = ["Navn","Postnumre","Dækning antal (%)","DPP*"]
 
 
 # Compute area visited
-cur.execute("SELECT 100*sum(Zips.area)/14953469.18 FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
+cur.execute("SELECT 100*sum(Zips.area)/43034.83994881 FROM Beers INNER JOIN Zips ON Beers.Zipcode=Zips.zip GROUP BY Beers.Participant ORDER BY count() DESC")
 area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
 
 # Fetch beers the last 7 days - Old Green Jersy
