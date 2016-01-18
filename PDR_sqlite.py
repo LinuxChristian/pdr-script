@@ -217,7 +217,9 @@ def WriteMapFooter(parti):
     var baseMaps = {
     'Thunderforest Outdoors': basemap_0
     };
-    L.control.layers(baseMaps,{
+    L.control.layers(baseMaps,{"Sjaelland": exp_SjaellandJSON,
+    "Fyn": exp_FynJSON,
+    "Jylland": exp_JyllandJSON,
     '''
 
     for i,p in enumerate(parti):
@@ -226,9 +228,7 @@ def WriteMapFooter(parti):
         if i < len(parti)-1:
             s+=','
             
-    s+=''',"Sjaelland": exp_SjaellandJSON,
-    "Fyn": exp_FynJSON,
-    "Jylland": exp_JyllandJSON},{collapsed:true}).addTo(map);
+    s+='''},{collapsed:true}).addTo(map);
     function updateOpacity(value) {
     }
     L.control.scale({options: {position: 'bottomleft',maxWidth: 100,metric: true,imperial: false,updateWhenIdle: false}}).addTo(map);
