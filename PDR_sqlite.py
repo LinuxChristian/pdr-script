@@ -579,7 +579,7 @@ if __name__ == "__main__":
                 # Check for new participants
                 cur.execute('SELECT * FROM Participants WHERE Name = "'+entry[0]+'";')
                 if cur.fetchone() is None:
-                    print("Found new participant.. "+entry[0]+".. Adding to DB!")
+#                    print("Found new participant.. "+entry[0]+".. Adding to DB!")
                     UpdateUserDatabase(cur,entry[0])
 
                 # Commit beer entry to database
