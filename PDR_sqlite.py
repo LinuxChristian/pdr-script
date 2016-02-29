@@ -727,11 +727,15 @@ if (polka != polka_true):
     polka=polka+" <br>("+polka_true+")"
 
 # Giveout red shirt and fix duplets
-red=(stats_tmp.sort(["Sidste 7 dage","Points"],ascending=False))["Navn"].iloc[0]
-stats_tmp = stats_tmp[stats_tmp["Navn"] != red]
+if len(stats_tmp["Sidste 7 dage"].dropna()) == 0:
+    red = "Ingen! Drik mere!"
+else:
+    red=(stats_tmp.sort(["Sidste 7 dage","Points"],ascending=False))["Navn"].iloc[0]
+    stats_tmp = stats_tmp[stats_tmp["Navn"] != red]
 
 # Check if the jersy is only a loan
 red_true=(stats.sort(["Sidste 7 dage","Points"],ascending=False))["Navn"].iloc[0]
+
 if (red != red_true):
     red=red+" <br>("+red_true+")"
 
