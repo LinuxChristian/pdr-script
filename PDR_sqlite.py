@@ -111,6 +111,40 @@ def WriteMapIndex(parti):
             });	
             basemap_0.addTo(map);	
             var layerOrder=new Array();
+
+    function pop_Postnumre(feature, layer) {					
+    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['POSTNR_TXT'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['POSTBYNAVN'])) + '</td></tr></table>';
+            layer.bindPopup(popupContent);
+    }
+
+    function doStyleDanskepostnumre(feature) {
+                    return {
+                            color: '#000000',
+                            fillColor: '#4706d4',
+                            weight: 0.5,
+                            dashArray: '0',
+                            opacity: 1.0,
+                            fillOpacity: 0.0
+                    };
+
+    }
+    var exp_SjaellandJSON = new L.geoJson(exp_Sjaelland,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
+    });
+    layerOrder[layerOrder.length] = exp_SjaellandJSON;
+
+    var exp_FynJSON = new L.geoJson(exp_Fyn,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
+    });
+    layerOrder[layerOrder.length] = exp_FynJSON;
+
+    var exp_JyllandJSON = new L.geoJson(exp_Jylland,{
+            onEachFeature: pop_Postnumre,
+            style: doStyleDanskepostnumre
+    });
+    layerOrder[layerOrder.length] = exp_JyllandJSON;
     '''
         
     return s
@@ -166,39 +200,7 @@ parti - List of participants
 def WriteMapFooter(parti):
     # Write all zipcodes to map
     s = '''
-    function pop_Postnumre(feature, layer) {					
-    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['POSTNR_TXT'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['POSTBYNAVN'])) + '</td></tr></table>';
-            layer.bindPopup(popupContent);
-    }
 
-    function doStyleDanskepostnumre(feature) {
-                    return {
-                            color: '#000000',
-                            fillColor: '#4706d4',
-                            weight: 0.5,
-                            dashArray: '0',
-                            opacity: 1.0,
-                            fillOpacity: 0.0
-                    };
-
-    }
-    var exp_SjaellandJSON = new L.geoJson(exp_Sjaelland,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_SjaellandJSON;
-
-    var exp_FynJSON = new L.geoJson(exp_Fyn,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_FynJSON;
-
-    var exp_JyllandJSON = new L.geoJson(exp_Jylland,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_JyllandJSON;
 
     '''
     
@@ -255,7 +257,7 @@ def WriteMap(plist):
 
     s+=WriteMapFooter(plist)
 
-    with open('/home/pi/davfs/maps/latest/index.html','w') as f:
+    with open('/home/christian/davfs/maps/latest/index.html','w') as f:
         f.write(s.encode('utf-8'))
 
 '''
@@ -385,6 +387,7 @@ def ParseFacebook(post):
         if (z is None):
             print("Invalid zipcode!");
 	    print("Zip string: {}".format(szipcode));
+            return None
         else:
             # Get town
             town = z[0]
@@ -585,7 +588,16 @@ if __name__ == "__main__":
                 # Commit beer entry to database
                 UpdateBeerDatabase(cur,entry)
                 con.commit()
-    
+            else:
+                # Post a comment that message was rejected
+                url = 'https://graph.facebook.com/{}/comments'.format(post['id'])
+                url_data = urllib.urlencode({'access_token':token,
+                                         'message':'Din post kunne ikke behandles. Tjek postnummer og by! Skal genposten inden den kan registeres.',
+                                         'method':'post'})
+                response = urllib2.urlopen(url, url_data)
+                print('Unable to parse post. User informed... Status:')
+                page = response.read()
+
     ############################
     #      UPDATE TABLE        #
     ############################
@@ -635,7 +647,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
-        with open('/home/pi/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
+        with open('/home/christian/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
     # Write a combined user
@@ -658,14 +670,14 @@ if __name__ == "__main__":
 
     s += WriteFooter()
 
-    with open('/home/pi/davfs/maps/latest/latest/exp_AlleDeltagere.js','w') as f:
+    with open('/home/christian/davfs/maps/latest/latest/exp_AlleDeltagere.js','w') as f:
         f.write(s.encode('utf-8'))
 
     # Write participants to map
     cur.execute('SELECT * FROM Participants ORDER BY Points DESC;')
     participants = cur.fetchall()
-    participants.append((None,u'Alle Deltagere',None,None,None))
-    print(participants)
+    participants = [(None,u'Alle Deltagere',None,None,None)] + participants
+#    print(participants)
     WriteMap(participants)
 
 cur.execute("DROP TABLE tmp")
@@ -690,7 +702,7 @@ area = stats.insert(2,'Area',[f[0] for f in cur.fetchall()])
 day7_epoch = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%s')
 cur.execute("SELECT Participant,count() FROM Beers WHERE Drank_on >= "+day7_epoch+" GROUP BY Participant")
 rate=pd.DataFrame(cur.fetchall())
-print(rate)
+#print(rate)
 rate.columns = ["Navn","Sidste 7 Dage"]
 stats=pd.merge(stats,rate,on="Navn",how="outer")
 
@@ -780,7 +792,7 @@ stats['Navn'] = stats['Navn'].apply(lambda x: '<a target="_parent" href="parti/%
 s+=stats.to_html(index=False,classes=["scoreboard"],escape=False)
 
 
-with open("/home/pi/davfs/table.html", "w") as text_file:
+with open("/home/christian/davfs/table.html", "w") as text_file:
     text_file.write(s.encode('utf-8'))
 
 
@@ -867,7 +879,7 @@ for par in cur.fetchall():
 
     sn = (par[1].replace(' ','')).encode('ascii','ignore').replace('.','')
     print(sn)
-    with open("/home/pi/davfs/parti/"+sn+"_table.html", "w") as text_file:
+    with open("/home/christian/davfs/parti/"+sn+"_table.html", "w") as text_file:
         text_file.write(s.encode('utf-8'))
 
 con.close()
