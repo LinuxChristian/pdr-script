@@ -1,6 +1,10 @@
 # pdr-script
 
-This collection of scripts parse the PDR facebook page producing a kml file. This file is easy to import into google maps or any GIS software.
+Postnummer Danmark Rundt (PDR) is a Danish drinking game where you have to drink a beer in all Danish zip codes (postnummer).
+
+This repo is a collection of scripts to parse the PDR facebook page and maintain the current score of the game. The scripts generate a static HTML page and a client-side leaflet map to show the spatial drunkenness of each participant. It is unfortunately highly tailored to the current infrastructure and would be difficult to deploy else where.
+
+A live demo of the game is available here: www.fredborg-braedstrup.dk/PDR 
 
 # Usage
 * Become admin on the facebook page
