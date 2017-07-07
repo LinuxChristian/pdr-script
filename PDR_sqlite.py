@@ -27,6 +27,8 @@ from matplotlib import cm
 import pandas as pd
 from collections import OrderedDict
 
+from pdr.maputils import *
+
 # Turn off pandas column width limitor
 #if int((pd.version.short_version).split('.')[1]) >= 11:
 pd.set_option('display.max_colwidth', -1)
@@ -34,305 +36,6 @@ pd.set_option('display.max_colwidth', -1)
 #	pd.set_printoptions('display.max_colwidth', -1)
 
 
-'''
-####################
-#                  #
-# HELPER FUNCTIONS #
-#                  #
-####################
-'''
-
-'''
-This function returns the epoch time from each json
-response from facebook. This can then be used to sort
-the facebook posts.
-
-'''
-def json_time(json):
-    try:
-        return int(json["created_time"])
-    except KeyError:
-        return 0
-
-'''
-####################
-#                  #
-#  MAP FUNCTIONS   #
-#                  #
-####################
-'''
-
-'''
-This function writes the main part of the map
-index.html file
-
-INPUT:
-parti - List of participants
-'''
-def WriteMapIndex(parti):
-    s = '''
-    <!DOCTYPE html>
-    <html>
-            <head>
-                    <title>Postnr Danmark Rundt</title>
-                    <meta charset="utf-8" />
-                    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
-                    <link rel="stylesheet" type="text/css" href="css/own_style.css">
-                    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-                    <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
-                    <script src="js/leaflet-hash.js"></script>
-                    <script src="js/Autolinker.min.js"></script>
-                    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-            </head>
-            <body>
-                    <div id="map"></div>
-                    <input id="slide" type="range" min="0" max="1" step="0.1" value="1" onchange="updateOpacity(this.value)">\n
-<script src="latest/exp_Sjaelland.js"></script>
-<script src="latest/exp_Fyn.js"></script>
-<script src="latest/exp_Jylland.js"></script>\
-'''
-
-    # Add list of user data files
-    for p in parti:
-#        print(p[1])
-        s+='<script src="latest/exp_'+(p[1].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js"></script>\n'
-
-    s+='''
-            <script>
-            var map = L.map('map', {
-                    zoomControl:true, maxZoom:19
-            }).fitBounds([[53.7465326518,7.56974247323],[57.8457433581,15.0093935068]]);
-            var hash = new L.Hash(map);
-            var additional_attrib = 'created by Christian Braedstrup';
-            var feature_group = new L.featureGroup([]);
-            var raster_group = new L.LayerGroup([]);
-            var basemap_0 = L.tileLayer('http://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png', { 
-                    attribution: additional_attrib 
-            });	
-            basemap_0.addTo(map);	
-            var layerOrder=new Array();
-
-    function pop_Postnumre(feature, layer) {					
-    var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['POSTNR_TXT'])) + '</td></tr><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['POSTBYNAVN'])) + '</td></tr></table>';
-            layer.bindPopup(popupContent);
-    }
-
-    function doStyleDanskepostnumre(feature) {
-                    return {
-                            color: '#000000',
-                            fillColor: '#4706d4',
-                            weight: 0.5,
-                            dashArray: '0',
-                            opacity: 1.0,
-                            fillOpacity: 0.0
-                    };
-
-    }
-    var exp_SjaellandJSON = new L.geoJson(exp_Sjaelland,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_SjaellandJSON;
-
-    var exp_FynJSON = new L.geoJson(exp_Fyn,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_FynJSON;
-
-    var exp_JyllandJSON = new L.geoJson(exp_Jylland,{
-            onEachFeature: pop_Postnumre,
-            style: doStyleDanskepostnumre
-    });
-    layerOrder[layerOrder.length] = exp_JyllandJSON;
-    '''
-        
-    return s
-
-'''
-This function writes the user data to the index
-
-INPUT:
-p - Name of Participant
-
-'''
-def WriteMapParti(p,i):
-
-    shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
-    c = np.multiply(cm.Paired(i*10)[:3],255)
-    s = '''
-    function pop_'''+shortname+'''(feature, layer) {					
-    var popupContent = '<table><tr><th scope="row">Navn</th><td>' + Autolinker.link(String(feature.properties['Navn'])) + '</td></tr><tr><th scope="row">Postnummer</th><td>' + Autolinker.link(String(feature.properties['Postnummer'])) + '</td></tr><tr><th scope="row">By</th><td>' + Autolinker.link(String(feature.properties['By'])) + '</td></tr><tr><th scope="row">Dato</th><td>' + Autolinker.link(String(feature.properties['Dato'])) + '</td></tr></table>';
-    layer.bindPopup(popupContent);
-    }
-
-    function doStyle'''+shortname+'''(feature) {
-    return {
-    color: '#000000',
-    fillColor: '#'''+'%02x%02x%02x' % (c[0], c[1], c[2])+'''',
-    weight: 1.3,
-    dashArray: '',
-    opacity: 0.466666666667,
-    fillOpacity: 0.466666666667
-    };'''
-    
-    s+='''}
-    var exp_'''+shortname+'''JSON = new L.geoJson(exp_'''+shortname+''',{
-    onEachFeature: pop_'''+shortname+''',
-    style: doStyle'''+shortname+'''
-    });
-    layerOrder[layerOrder.length] = exp_'''+shortname+'''JSON;
-        '''
-
-#    for (index = 0; index < layerOrder.length; index++) {
-#    feature_group.removeLayer(layerOrder[index]);feature_group.addLayer(layerOrder[index]);
-#   }
-#    //add comment sign to hide this layer on the map in the initial view.
-#    feature_group.addLayer(exp_'''+shortname+'''JSON);
-    return s;
-
-'''
-Writes the remaining part of the index file.
-
-INPUT:
-parti - List of participants
-'''
-def WriteMapFooter(parti):
-    # Write all zipcodes to map
-    s = '''
-
-
-    '''
-    
-    s += '''
-    feature_group.addTo(map);
-    var title = new L.Control();
-    title.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-    this.update();
-    return this._div;
-    };
-    title.update = function () {
-    this._div.innerHTML = '<h2>Postnr Danmark Rundt</h2>Status: '''+datetime.date.today().strftime("%d %b %Y - %H:%m")+''' '
-    };
-    title.addTo(map);
-    var baseMaps = {
-    'Thunderforest Outdoors': basemap_0
-    };
-    L.control.layers(baseMaps,{"Sjaelland": exp_SjaellandJSON,
-    "Fyn": exp_FynJSON,
-    "Jylland": exp_JyllandJSON,
-    '''
-
-    for i,p in enumerate(parti):
-        shortname = (p[1].replace(' ','')).encode('ascii','ignore').replace('.','')
-        s+='"'+p[1]+'": exp_'+shortname+"JSON"
-        if i < len(parti)-1:
-            s+=','
-            
-    s+='''},{collapsed:true}).addTo(map);
-    function updateOpacity(value) {
-    }
-    L.control.scale({options: {position: 'bottomleft',maxWidth: 100,metric: true,imperial: false,updateWhenIdle: false}}).addTo(map);
-    </script>
-    </body>
-    </html>
-
-    '''
-    return s;
-
-'''
-Combined function to write new participants
-into the index.html file
-
-INPUT:
-plist - List of all participants
-'''
-def WriteMap(plist):
-    s = ''
-    s+=WriteMapIndex(plist)
-    
-    for i,p in enumerate(plist):
-        s+=WriteMapParti(p,i)
-
-    s+=WriteMapFooter(plist)
-
-    with open('/home/christian/davfs/maps/latest/index.html','w') as f:
-        f.write(s.encode('utf-8'))
-
-'''
-####################
-#                  #
-#  MAP FUNCTIONS   #
-#                  #
-####################
-'''
-def WriteHeader(name):
-    # Write the first part
-    s = '''var exp_'''+(name.replace(' ','')).encode('ascii','ignore').replace('.','')+''' = {
-    "type": "FeatureCollection",
-    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-    
-    "features": [\n'''
-
-    return s
-
-'''
-This function writes the current location
-polygon to json format for leaflet.
-
-Polygons can either be single or in a
-multipolygon structure.
-'''
-def WritePolygon(data,place):
-#
-    s = ""
-    try:
-        s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]
-        s += '''","Postnummer":"'''+str(data[3])
-        s += '''","By":"'''+data[2]
-        s += '''","Dato":"'''+datetime.datetime.fromtimestamp(float(data[1])).strftime('%Y-%m-%d %H:%M:%S')+'''"}, "geometry":{"type":'''
-        
-        # Parse polygons
-        if hasattr(place,"MultiGeometry"):
-            poly = place.MultiGeometry.Polygon;
-            s=s+'''"MultiPolygon","coordinates":[ [ '''
-        else:
-            poly = place.Polygon;
-            s=s+'''"Polygon","coordinates":[ '''
-
-        # Loop over geometries
-        for i,pol in enumerate(poly):
-            pol = str(pol.outerBoundaryIs.LinearRing.coordinates)
-            # Old way
-            #p = np.array([x.split(',') for x in (pol.split(' '))]).astype(np.float)
-            #s=s+np.array_str(p).replace('\n',', ')
-
-            arr = np.array([np.fromstring(x,dtype=np.float,sep=',') for x in pol.split(' ')])
-            s+=np.array2string(arr,separator=',').replace('\n','').replace(' ','')
-
-            # Write comma if multiple polygons
-            if len(poly)-1 == i:
-                # Support for MultiGeometry
-                if hasattr(place,"MultiGeometry"):
-                    s=s+''']] } }'''
-                else:
-                    s=s+'''] } }'''
-            else:
-                s=s+''' ], [ '''
-
-    except:
-        print("Failed to parse record!")
-        print(data)
-        print(place)
-
-    return s;
-
-'''
-This function writes the ende of file
-'''
-def WriteFooter():
-    return '\n]\n}'
 
 ######################
 #   Facebook Post    #
@@ -566,7 +269,6 @@ if __name__ == "__main__":
     PMN = [str(x) for x in root.Document.findall("Placemark/name")]
 
     print("Found "+str(len(data['data']))+" records")
-    
     ############################
     #  INSERT INTO TMP TABLE   #
     ############################
@@ -575,7 +277,7 @@ if __name__ == "__main__":
     con.commit()
 
     for post in data['data']:
-        if ('message' in post) and ('full_picture' in post):
+        if ('message' in post) and ('full_picture' in post) and post['created_time'] > latest_epoch:
             entry = ParseFacebook(post)
 
             if entry is not None:
@@ -621,12 +323,14 @@ if __name__ == "__main__":
     #      WRITE MAP DATA      #
     ############################
     # Get data for zipcode
-    cur.execute('SELECT * FROM tmp;')
+#    cur.execute('SELECT * FROM tmp;')
+    cur.execute('SELECT Name FROM Participants;')
     if len(data['data']) > 0 or True:
 	participants = cur.fetchall()
     else:
 	participants = []
 
+    print(participants)
     for p in participants:
         cur.execute('SELECT * FROM Beers WHERE Participant = "'+p[0]+'";')
         s = WriteHeader(p[0].encode('ascii','ignore'));
@@ -635,7 +339,8 @@ if __name__ == "__main__":
         for i,b in enumerate(beers):
             try:
                 place = PM[PMN.index(str(b[3]))]    
-            except e:    
+            except Exception, e:
+                print(PMN)
                 print "Error %s:" % e.args[0]
                 sys.exit(1)
 
@@ -647,6 +352,7 @@ if __name__ == "__main__":
 
         s += WriteFooter()
 
+        print("Writing exp_",p)
         with open('/home/christian/davfs/maps/latest/latest/exp_'+(p[0].replace(' ','')).encode('ascii','ignore').replace('.','')+'.js','w') as f:
             f.write(s.encode('utf-8'))
 
@@ -658,7 +364,7 @@ if __name__ == "__main__":
     for i,b in enumerate(beers):
         try:
             place = PM[PMN.index(str(b[3]))]    
-        except e:    
+        except e:
             print "Error %s:" % e.args[0]
             sys.exit(1)
 
