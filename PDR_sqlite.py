@@ -368,7 +368,10 @@ if __name__ == "__main__":
             print "Error %s:" % e.args[0]
             sys.exit(1)
 
-        s=s+WritePolygon(b,place)
+        # Get all beers in this zipcode
+        cur.execute("SELECT count(*) FROM Beers WHERE Zipcode == '"+str(b[3])+"'")
+        num = cur.fetchall()
+        s=s+WritePolygon(b,place,num[0][0])
 
         if i < len(beers)-1:
             s += ',\n'

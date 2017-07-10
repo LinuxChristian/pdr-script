@@ -302,13 +302,14 @@ polygon to json format for leaflet.
 Polygons can either be single or in a
 multipolygon structure.
 '''
-def WritePolygon(data,place):
+def WritePolygon(data,place,besogende=0):
 #
     s = ""
 
     s += '''{ "type": "Feature", "properties": {"Navn":"'''+data[0]
     s += '''","Postnummer":"'''+str(data[3])
     s += '''","By":"'''+data[2]
+    s += '''","Besogende":"'''+str(besogende)
     s += '''","Dato":"'''+datetime.datetime.fromtimestamp(float(data[1])).strftime('%Y-%m-%d %H:%M:%S')+'''"}, "geometry":{"type":'''
 
     # Parse polygons
