@@ -121,37 +121,40 @@ def WriteMapIndex(parti):
       pane: 'labels'
       }).addTo(map);
 
+function getColor(d) {
+    return d > 6 ? '#800026' :
+           d > 5  ? '#BD0026' :
+           d > 4  ? '#E31A1C' :
+           d > 3  ? '#FC4E2A' :
+           d > 2   ? '#FD8D3C' :
+           d > 1   ? '#FEB24C' :
+           d > 0   ? '#FED976' :
+                      '#FFEDA0';
+}
+
       exp_JyllandJSON = L.geoJson(exp_Jylland).addTo(map);
       exp_FynJSON = L.geoJson(exp_Fyn).addTo(map);
       exp_SjaellandJSON = L.geoJson(exp_Sjaelland).addTo(map);
 
       exp_JyllandJSON.eachLayer(function (layer) {
-      layer.bindPopup(layer.feature.properties.Postnummer);
+    var popupContent = '<table><tr><td>' + String(layer.feature.properties['Postnummer']) + ' ' + String(layer.feature.properties['By']) + '</td></tr></table>';
+    layer.bindPopup(popupContent);
       });
 
       exp_FynJSON.eachLayer(function (layer) {
-      layer.bindPopup(layer.feature.properties.Postnummer);
+    var popupContent = '<table><tr><td>' + String(layer.feature.properties['Postnummer']) + ' ' + String(layer.feature.properties['By']) + '</td></tr></table>';
+      layer.bindPopup(popupContent);
       });
 
       exp_SjaellandJSON.eachLayer(function (layer) {
-      layer.bindPopup(layer.feature.properties.Postnummer);
+    var popupContent = '<table><tr><td>' + String(layer.feature.properties['Postnummer']) + ' ' + String(layer.feature.properties['By']) + '</td></tr></table>';
+//      layer.bindPopup(layer.feature.properties.Postnummer);
+      layer.bindPopup(popupContent);
       });
 
     function pop_Postnumre(feature, layer) {					
     var popupContent = '<table><tr><th scope="row">Postnummer</th><td>' + String(feature.properties['POSTNR_TXT']) + '</td></tr><tr><th scope="row">Navn</th><td>' + String(feature.properties['POSTBYNAVN']) + '</td></tr></table>';
             layer.bindPopup(popupContent);
-    }
-
-    function doStyleDanskepostnumre(feature) {
-                    return {
-                            color: '#000000',
-                            fillColor: '#4706d4',
-                            weight: 0.5,
-                            dashArray: '0',
-                            opacity: 1.0,
-                            fillOpacity: 0.0
-                    };
-
     }
 
     '''
