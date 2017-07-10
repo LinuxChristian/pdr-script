@@ -2049,6 +2049,7 @@
 			<styleUrl>#poly-000000-0-0</styleUrl>
 			<ExtendedData>
 			</ExtendedData>
+			<MultiGeometry>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -2057,13 +2058,6 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
-		</Placemark>
-		<Placemark>
-			<name>4340</name>
-			<description><![CDATA[Attributes<br>  DISTNAME  Tølløse]]></description>
-			<styleUrl>#poly-000000-0-0</styleUrl>
-			<ExtendedData>
-			</ExtendedData>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -2072,6 +2066,7 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
+			</MultiGeometry>
 		</Placemark>
 		<Placemark>
 			<name>4350</name>
@@ -3369,14 +3364,6 @@
 						</LinearRing>
 					</outerBoundaryIs>
 				</Polygon>
-			</MultiGeometry>
-		</Placemark>
-		<Placemark>
-			<name>4930</name>
-			<description><![CDATA[Attributes<br>  DISTNAME  Maribo]]></description>
-			<styleUrl>#poly-000000-0-0</styleUrl>
-			<ExtendedData>
-			</ExtendedData>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -3385,6 +3372,7 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
+			</MultiGeometry>
 		</Placemark>
 		<Placemark>
 			<name>4941</name>
@@ -6593,6 +6581,7 @@
 			<styleUrl>#poly-000000-0-0</styleUrl>
 			<ExtendedData>
 			</ExtendedData>
+			<MultiGeometry>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -6601,13 +6590,6 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
-		</Placemark>
-		<Placemark>
-			<name>7451</name>
-			<description><![CDATA[Attributes<br>  DISTNAME  Sunds]]></description>
-			<styleUrl>#poly-000000-0-0</styleUrl>
-			<ExtendedData>
-			</ExtendedData>
 			<Polygon>
 				<outerBoundaryIs>
 					<LinearRing>
@@ -6616,6 +6598,7 @@
 					</LinearRing>
 				</outerBoundaryIs>
 			</Polygon>
+		      </MultiGeometry>
 		</Placemark>
 		<Placemark>
 			<name>7470</name>
